@@ -26,7 +26,8 @@ def echo_handler(message):
 
 @bot.message_handler(commands=['info'])
 def info_handler(message):
-    bot.reply_to(message, 'Igor Moroz - Lepshy')
+    bot.reply_to(message, 'Rostislav Budarin - Lepshy')
+
 
 # Start the bot
 bot.polling()

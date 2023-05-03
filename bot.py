@@ -31,3 +31,5 @@ def info_handler(message):
 
 # Start the bot
 bot.polling()
+
+#сделал фигню

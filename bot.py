@@ -9,7 +9,7 @@ bot = telebot.TeleBot(f"{const.API_KEY}")
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
-    menu_keyboard.add(KeyboardButton('/help'), KeyboardButton('/echo'), KeyboardButton('/info'))
+    menu_keyboard.add(KeyboardButton('/help'), KeyboardButton('/info'))
     bot.reply_to(message, 'Welcome to my bot!', reply_markup=menu_keyboard)
 
 

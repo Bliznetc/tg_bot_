@@ -26,7 +26,7 @@ def echo_handler(message):
 
 @bot.message_handler(commands=['info'])
 def info_handler(message):
-    bot.reply_to(message, 'Rostislav Budarin - Lepshy')
+    bot.reply_to(message, 'Rostislav Moroz - Lepshy')
 
 
 # Start the bot

@@ -4,6 +4,7 @@ from telebot import types
 import datetime
 import time
 import constants as const
+import threading
 
 quiz_list = [
     {'word': 'cat', 'translation': 'кот'},
@@ -52,18 +53,9 @@ def schedule_quiz():
             quiz_keyboard.add(types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
         bot.send_message(chat_id='YOUR_CHAT_ID_HERE', text=quiz_text, reply_markup=quiz_keyboard)
         time.sleep(3600)  # send the quiz every hour
+print(__name__)
 
-if name == 'main':
+if __name__ == '__main__':
     quiz_scheduler_thread = threading.Thread(target=schedule_quiz)
     quiz_scheduler_thread.start()
     bot.polling()
-
-import telebot
-
-bot = telebot.TeleBot('YOUR_BOT_TOKEN_HERE')
-
-@bot.message_handler(func=lambda message: True)
-def print_chat_id(message):
-    print(message.chat.id)
-
-bot.polling()

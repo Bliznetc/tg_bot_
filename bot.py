@@ -33,3 +33,4 @@ def info_handler(message):
 bot.polling()
 
 #сделал фигню
+#сделал фигню №2

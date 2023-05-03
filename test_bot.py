@@ -4,7 +4,6 @@ from telebot import types
 import datetime
 import time
 import constants as const
-import threading
 
 quiz_list = [
     {'word': 'cat', 'translation': 'кот'},
@@ -26,8 +25,6 @@ def generate_quiz():
 def send_quiz(message):
     word, answer_options = generate_quiz()
     quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    for i, answer_option in enumerate(answer_options):
-        quiz_text += f"{i+1}. {answer_option['translation']}\n"
     quiz_keyboard = types.InlineKeyboardMarkup()
     for answer_option in answer_options:
         quiz_keyboard.add(types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
@@ -42,20 +39,8 @@ def check_quiz(call):
         message_text = "Sorry, that was incorrect."
     bot.answer_callback_query(callback_query_id=call.id, text=message_text)
 
-def schedule_quiz():
-    while True:
-        word, answer_options = generate_quiz()
-        quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-        for i, answer_option in enumerate(answer_options):
-            quiz_text += f"{i+1}. {answer_option['translation']}\n"
-        quiz_keyboard = types.InlineKeyboardMarkup()
-        for answer_option in answer_options:
-            quiz_keyboard.add(types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-        bot.send_message(chat_id='YOUR_CHAT_ID_HERE', text=quiz_text, reply_markup=quiz_keyboard)
-        time.sleep(3600)  # send the quiz every hour
+
 print(__name__)
 
 if __name__ == '__main__':
-    quiz_scheduler_thread = threading.Thread(target=schedule_quiz)
-    quiz_scheduler_thread.start()
     bot.polling()

@@ -19,7 +19,7 @@ def start_handler(message):
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
 def help_handler(message):
-    bot.reply_to(message, 'This is the help message.')
+    bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole dict" - to check all the words')
 
 # Define a function to handle the /echo command
 @bot.message_handler(commands=['echo'])
@@ -31,11 +31,29 @@ def echo_handler(message):
 def info_handler(message):
     bot.reply_to(message, 'Rostislav Budarin - Lepshy')
 
+@bot.message_handler(commands=['add_word'])
+def add_word(message):
+    bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
+    bot.register_next_step_handler(message, add_word_to_dict)
+
+def add_word_to_dict(message):
+    new_key = message.text.split('-')[0]
+    new_meaning = message.text.split('-')[1]
+    dt.quiz_list.append({'word': new_key, 'translation': new_meaning}) #здесь было неправильно
+    bot.send_message(message.chat.id, f"ваше слово: {new_key}, перевод: {new_meaning}")
+    print(len(dt.quiz_list))
+
+'''
+def info_handler(message):
+    bot.reply_to(message, 'Rostislav Budarin - Lepshy')
+'''
+
 # generates quiz when user types "/quiz"
 def generate_quiz():
     word = random.choice(dt.quiz_list)
     answer_options = random.sample(dt.quiz_list, 3)
     answer_options.append(word)
+    print(answer_options) # for debugging
     random.shuffle(answer_options)
     return word, answer_options
 
@@ -64,3 +82,4 @@ if __name__ == '__main__':
     bot.polling()
 
 #сделал фигню
+#сделал фигню №2

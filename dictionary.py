@@ -4,5 +4,3 @@ quiz_list = [
     {'word': 'apple', 'translation': 'яблоко'},
     # add more words and translations to the list
 ]
-
-# сделать это отдельным json файлом

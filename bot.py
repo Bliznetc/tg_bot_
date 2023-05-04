@@ -39,7 +39,7 @@ def add_word(message):
 def add_word_to_dict(message):
     new_key = message.text.split('-')[0]
     new_meaning = message.text.split('-')[1]
-    dt.quiz_list.append({f"'word': {new_key}, 'translation': {new_meaning}"})
+    dt.quiz_list.append({'word': new_key, 'translation': new_meaning}) #здесь было неправильно
     bot.send_message(message.from_user.id, f"ваше слово: {new_key}, перевод: {new_meaning}")
     print(len(dt.quiz_list))
 
@@ -53,6 +53,7 @@ def generate_quiz():
     word = random.choice(dt.quiz_list)
     answer_options = random.sample(dt.quiz_list, 3)
     answer_options.append(word)
+    print(answer_options) # for debugging
     random.shuffle(answer_options)
     return word, answer_options
 

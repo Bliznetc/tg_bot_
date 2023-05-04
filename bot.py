@@ -94,6 +94,7 @@ def send_quiz(message):
             types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
     bot.send_message(chat_id=message.chat.id, text=quiz_text, reply_markup=quiz_keyboard)
 
+
 def send_quiz_via_chatid(chat_id):
     word, answer_options = generate_quiz()
     quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
@@ -120,7 +121,7 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     cur_minute = now.minute
     cur_second = now.second
-    print(cur_second)
+    print("cur_second - " cur_second)
     if cur_second == 20:
         send_quiz_via_chatid(const.chat_ids[0])
 

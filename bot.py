@@ -120,6 +120,7 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     cur_minute = now.minute
     cur_second = now.second
+    print(cur_second)
     if cur_second == 20:
         send_quiz_via_chatid(const.chat_ids[0])
 

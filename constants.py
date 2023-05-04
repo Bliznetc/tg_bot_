@@ -1,1 +1,3 @@
 API_KEY = "6229703706:AAGmUdzEuYC9vyPLiOh8Kpg112NtmA3EWf0"
+
+chat_ids = [955008318]

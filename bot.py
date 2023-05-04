@@ -19,7 +19,7 @@ def start_handler(message):
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
 def help_handler(message):
-    bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole dict" - to check all the words')
+    bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words')
 
 # Define a function to handle the /echo command
 @bot.message_handler(commands=['echo'])
@@ -42,11 +42,12 @@ def add_word_to_dict(message):
     dt.quiz_list.append({'word': new_key, 'translation': new_meaning}) #здесь было неправильно
     bot.send_message(message.chat.id, f"ваше слово: {new_key}, перевод: {new_meaning}")
     print(len(dt.quiz_list))
+    printAllWords(message.from_user.id)
 
-'''
-def info_handler(message):
-    bot.reply_to(message, 'Rostislav Budarin - Lepshy')
-'''
+def printAllWords(message_id):
+    for word in dt.quiz_list:
+       bot.send_message(message_id, f"{word['word']} - {word['translation']}")
+
 
 # generates quiz when user types "/quiz"
 def generate_quiz():

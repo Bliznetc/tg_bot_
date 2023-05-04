@@ -40,7 +40,7 @@ def add_word_to_dict(message):
     new_key = message.text.split('-')[0]
     new_meaning = message.text.split('-')[1]
     dt.quiz_list.append({'word': new_key, 'translation': new_meaning}) #здесь было неправильно
-    bot.send_message(message.from_user.id, f"ваше слово: {new_key}, перевод: {new_meaning}")
+    bot.send_message(message.chat.id, f"ваше слово: {new_key}, перевод: {new_meaning}")
     print(len(dt.quiz_list))
 
 '''

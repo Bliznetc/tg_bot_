@@ -53,7 +53,24 @@ def printAllWords(message_id):
 def generate_quiz():
     word = random.choice(dt.quiz_list)
     answer_options = random.sample(dt.quiz_list, 3)
-    answer_options.append(word)
+    f = 1
+    for a in answer_options:
+        if (a['word'] == word['word']):
+            f = 0
+
+    if f == 1:
+        answer_options.append(word)
+    else:
+        for a in dt.quiz_list:
+            ok = 1
+            for b in answer_options:
+                if a['word'] == b['word']:
+                    ok = 0
+
+            if ok == 1:
+                answer_options.append(a)
+                break
+
     print(answer_options) # for debugging
     random.shuffle(answer_options)
     return word, answer_options

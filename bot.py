@@ -59,26 +59,8 @@ def printAllWords(message_id):
 
 # generates quiz when user types "/quiz"
 def generate_quiz():
-    word = random.choice(dt.quiz_list)
-    answer_options = random.sample(dt.quiz_list, 3)
-    f = 1
-    for a in answer_options:
-        if a['word'] == word['word']:
-            f = 0
-
-    if f == 1:
-        answer_options.append(word)
-    else:
-        for a in dt.quiz_list:
-            ok = 1
-            for b in answer_options:
-                if a['word'] == b['word']:
-                    ok = 0
-
-            if ok == 1:
-                answer_options.append(a)
-                break
-
+    answer_options = random.sample(dt.quiz_list, 4)
+    word = random.choice(answer_options)
     print(answer_options)  # for debugging
     random.shuffle(answer_options)
     return word, answer_options
@@ -121,7 +103,7 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     cur_minute = now.minute
     cur_second = now.second
-    print("cur_second - " cur_second)
+    print("cur_second - " + cur_second)
     if cur_second == 20:
         send_quiz_via_chatid(const.chat_ids[0])
 

@@ -2,6 +2,6 @@
     "name": "my-telegram-bot",
     "version": "1.0.0",
     "scripts": {
-      "start": "python bot.py"
+      "start": "usr/bin/python bot.py"
     }
   }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!D:\python\python.exe
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import constants as const

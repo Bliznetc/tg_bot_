@@ -2,6 +2,6 @@
     "name": "my-telegram-bot",
     "version": "1.0.0",
     "scripts": {
-      "start": "D:/python/python.exe D:/projects_vs/tg_bot/bot.py"
+      "start": "python D:/projects_vs/tg_bot/bot.py"
     }
   }

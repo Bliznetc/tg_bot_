@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import constants as const

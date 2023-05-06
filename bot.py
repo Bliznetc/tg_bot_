@@ -1,3 +1,4 @@
+import threading
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import constants as const
@@ -86,6 +87,7 @@ def send_quiz_via_chatid(chat_id):
             types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
     bot.send_message(chat_id, text=quiz_text, reply_markup=quiz_keyboard)
 
+
 @bot.callback_query_handler(func=lambda call: True)
 def check_quiz(call):
     is_correct = call.data == "True"
@@ -96,16 +98,33 @@ def check_quiz(call):
     bot.answer_callback_query(callback_query_id=call.id, text=message_text)
 
 
+def send_quiz_every_10sec():
+    now = datetime.datetime.now()
+    cur_second = now.second
+    print("cur_second - ", cur_second)
+    if cur_second % 10 == 0:
+        send_quiz_via_chatid(const.chat_ids[0])
+
+
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+
+
+# Start the interval function to send messages every 30 seconds
+set_interval(send_quiz_every_10sec, 1)
+
+# Запустите функцию для отправки квизов каждые 10 секунд
+send_quiz_every_10sec()
+
 print(__name__)
 
 if __name__ == '__main__':
     bot.polling()
-    now = datetime.datetime.now()
-    cur_minute = now.minute
-    cur_second = now.second
-    print("cur_second - " + cur_second)
-    if cur_second == 20:
-        send_quiz_via_chatid(const.chat_ids[0])
 
 # сделал фигню
 # сделал фигню №2

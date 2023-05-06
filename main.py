@@ -84,7 +84,7 @@ def send_quiz_via_chatid(chat_id):
     for answer_option in answer_options:
         quiz_keyboard.add(
             types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-    bot.send_message(chat_id, text=quiz_text, reply_markup=quiz_keyboard)
+    bot.send_message(chat_id=chat_id, text=quiz_text, reply_markup=quiz_keyboard) #здесь была ошибка, так как функция принимала именные аргументы, а ты передал позиционный
 
 @bot.callback_query_handler(func=lambda call: True)
 def check_quiz(call):
@@ -103,9 +103,17 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     cur_minute = now.minute
     cur_second = now.second
-    print("cur_second - " + cur_second)
+    cur_second = 20 # изменил это на 20б чтобы выполнялся код ниже
+    print("cur_second - " + str(cur_second))# fixed string concatenation
     if cur_second == 20:
-        send_quiz_via_chatid(const.chat_ids[0])
+        send_quiz_via_chatid(const.chat_ids[0])# выдаёт ошибку: чат не найден, так как я изменил api key на тестовый, поэтому нужно будет изменить constants.py
 
-# сделал фигню
-# сделал фигню №2
+# этот код отправит тебе один квиз после того, когда ты остановишь бота. Надо смотреть как это сделать дальше. 
+# Пока что не изменил dictionary.py на dictionary.json, потому что заебался и хочу спать)))
+
+# Кстати этот сервис который нам хостит бота, также может хостить БД, что можно использовать для хранения id чатов и отдельных словарей для пользователей
+
+# B последнее, было бы неплохо изменить /add_word, чтобы он можно было закидывать много слов (например "слово1-перевод1;слово2-перевод2;..."), а также добавить 
+# возможность закидывать файл
+
+# постараюсь добавить всё в issues, чтобы оно просто висело, а то заметки в коде - это пиздец

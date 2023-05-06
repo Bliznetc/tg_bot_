@@ -54,7 +54,7 @@ def add_word_to_dict(message):
 
 def printAllWords(message_id):
     for word in dt.quiz_list:
-        bot.send_message(message_id, f"{word['word']} - {word['translation']}")
+        bot.send_message(message_id, f"{word['word']} - {word['translation']}") #зачем????
 
 
 # generates quiz when user types "/quiz"

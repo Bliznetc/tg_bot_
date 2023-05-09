@@ -2,11 +2,11 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import constants as const
 import random
-import dictionary as dt
 from telebot import types
+import json_functions as jsonFunc
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 
 # Define a function to handle the /start command
@@ -24,11 +24,14 @@ def help_handler(message):
                           'all the words')
 
 
-# Define a function to handle the /echo command
-@bot.message_handler(commands=['echo'])
-def echo_handler(message):
-    message_text = message.text.split(maxsplit=1)[1]  # Get the text after the command
-    bot.reply_to(message, message_text)
+# Define a function to handle the /whole_dict command
+@bot.message_handler(commands=['whole_dict'])
+def whole_dict_handler(message):
+    with open("dictionary.json", "r", encoding="utf-8") as file:
+        dictionary = json.load(file)
+
+    for word in dictionary:
+        bot.send_message(message.chat.id, f"{word['word']} - {word['translation']}") #зачем????
 
 
 @bot.message_handler(commands=['info'])
@@ -39,26 +42,20 @@ def info_handler(message):
 @bot.message_handler(commands=['add_word'])
 def add_word(message):
     bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
-    bot.register_next_step_handler(message, add_word_to_dict)
+    bot.register_next_step_handler(message, add_and_verify)
+    
 
 
-def add_word_to_dict(message):
-    new_key = message.text.split('-')[0]
-    new_meaning = message.text.split('-')[1]
-    dt.quiz_list.append({'word': new_key, 'translation': new_meaning})  # здесь было неправильно
-    bot.send_message(message.chat.id, f"ваше слово: {new_key}, перевод: {new_meaning}")
-    print(len(dt.quiz_list))
-    printAllWords(message.from_user.id)
+def add_and_verify(message):
+    jsonFunc.add_word_to_dt(message)
 
-
-def printAllWords(message_id):
-    for word in dt.quiz_list:
-        bot.send_message(message_id, f"{word['word']} - {word['translation']}") #зачем????
-
+    bot.send_message(message.chat.id, "Словарь обновлен!")
+    
+    
 
 # generates quiz when user types "/quiz"
 def generate_quiz():
-    answer_options = random.sample(dt.quiz_list, 4)
+    answer_options = jsonFunc.create_answer_options()
     word = random.choice(answer_options)
     print(answer_options)  # for debugging
     random.shuffle(answer_options)

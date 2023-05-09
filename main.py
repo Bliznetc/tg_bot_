@@ -31,20 +31,19 @@ def whole_dict_handler(message):
         dictionary = json.load(file)
 
     for word in dictionary:
-        bot.send_message(message.chat.id, f"{word['word']} - {word['translation']}") #зачем????
+        bot.send_message(message.chat.id, f"{word['word']} - {word['translation']}")
 
 
 @bot.message_handler(commands=['info'])
 def info_handler(message):
     bot.reply_to(message, 'Rostislav Budarin - Lepshy')
 
-
+#adds word to the dictionary.json file 
 @bot.message_handler(commands=['add_word'])
 def add_word(message):
     bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
     bot.register_next_step_handler(message, add_and_verify)
     
-
 
 def add_and_verify(message):
     jsonFunc.add_word_to_dt(message)
@@ -52,7 +51,6 @@ def add_and_verify(message):
     bot.send_message(message.chat.id, "Словарь обновлен!")
     
     
-
 # generates quiz when user types "/quiz"
 def generate_quiz():
     answer_options = jsonFunc.create_answer_options()
@@ -61,7 +59,7 @@ def generate_quiz():
     random.shuffle(answer_options)
     return word, answer_options
 
-
+# sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(message):
     word, answer_options = generate_quiz()
@@ -72,7 +70,7 @@ def send_quiz(message):
             types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
     bot.send_message(chat_id=message.chat.id, text=quiz_text, reply_markup=quiz_keyboard)
 
-
+# checks quiz
 @bot.callback_query_handler(func=lambda call: True)
 def check_quiz(call):
     is_correct = call.data == "True"
@@ -88,5 +86,4 @@ print(__name__)
 if __name__ == '__main__':
     bot.polling()
 
-# сделал фигню
-# сделал фигню №2
+

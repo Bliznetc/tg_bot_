@@ -23,8 +23,8 @@ def start_handler(message):
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
 def help_handler(message):
-    bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check '
-                          'all the words')
+    bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
+                '"/start_mailing" - to start getting quizes')
 
 
 # Define a function to handle the /whole_dict command
@@ -125,7 +125,16 @@ def set_interval(func, sec):
     t.start()
     return t
 
-set_interval(send_quiz_spam, 28)
+
+@bot.message_handler(commands=['start_mailing'])
+def start_mailing(message):
+    set_interval(send_quiz_spam, 30)
+    bot.send_message(message.chat.id, "запустил рассылку")
+
+@bot.message_handler(commands=['stop_mailing'])
+def stop_mailing(message):
+    set_interval(send_quiz_spam, 900)
+    bot.send_message(message.chat.id, "остановил рассылку")
 
 print(__name__)
 

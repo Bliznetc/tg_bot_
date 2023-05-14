@@ -101,7 +101,8 @@ def send_quiz_spam():
                 types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
         bot.send_message(chat_id=chat_id, text=quiz_text,
                          reply_markup=quiz_keyboard)
-
+        
+        quiz_keyboard = types.InlineKeyboardMarkup()
 
 # checks quiz
 @bot.callback_query_handler(func=lambda call: True)
@@ -128,12 +129,12 @@ def set_interval(func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(send_quiz_spam, 30)
+    set_interval(send_quiz_spam, 10)
     bot.send_message(message.chat.id, "запустил рассылку")
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
-    set_interval(send_quiz_spam, 900)
+    set_interval(send_quiz_spam, 4) #запускает второй поток
     bot.send_message(message.chat.id, "остановил рассылку")
 
 print(__name__)

@@ -24,7 +24,7 @@ def start_handler(message):
 @bot.message_handler(commands=['help'])
 def help_handler(message):
     bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
-                '"/start_mailing" - to start getting quizes')
+                '"/start_mailing" - to start getting quizes\n "/stop_mailing" - to stop mailing' )
 
 
 # Define a function to handle the /whole_dict command
@@ -75,21 +75,6 @@ def send_quiz(message):
     bot.send_message(chat_id=message.chat.id, text=quiz_text, reply_markup=quiz_keyboard)
 
 
-#--------------------------
-#эта функция по-моему вообще не используется, не помню для чего я ее написал
-def send_quiz_via_chatid(chat_id):
-    word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
-    for answer_option in answer_options:
-        quiz_keyboard.add(
-            types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-    bot.send_message(chat_id=chat_id, text=quiz_text,
-                     reply_markup=quiz_keyboard)  # здесь была ошибка, так как функция принимала именные аргументы,
-                                                    # а ты передал позиционный
-#-----------------------------
-
-
 #sends quiz to every user
 def send_quiz_spam():
     word, answer_options = generate_quiz()
@@ -115,6 +100,7 @@ def check_quiz(call):
     bot.answer_callback_query(callback_query_id=call.id, text=message_text)
 
 
+
 #sets the interval for sending quizes
 def set_interval(func, sec):
     print("Я вызвал set_interval")
@@ -122,6 +108,7 @@ def set_interval(func, sec):
         set_interval(func, sec)
         func()
 
+    global t
     t = threading.Timer(sec, func_wrapper)
     t.start()
     return t
@@ -131,10 +118,12 @@ def set_interval(func, sec):
 def start_mailing(message):
     set_interval(send_quiz_spam, 10)
     bot.send_message(message.chat.id, "запустил рассылку")
+    print(threading.active_count(), "start")
+    
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
-    set_interval(send_quiz_spam, 4) #запускает второй поток
+    t.cancel()
     bot.send_message(message.chat.id, "остановил рассылку")
 
 print(__name__)

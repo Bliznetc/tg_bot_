@@ -1,8 +1,9 @@
 import json
+import os
 import threading
 
 import telebot
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
 import random
 from telebot import types
@@ -48,9 +49,45 @@ def add_word(message):
     bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
     bot.register_next_step_handler(message, add_and_verify)
 
+#Add words from files to the dict
+@bot.message_handler(content_types=['document'])
+def add_word_from_file (message):
+    file_info = message.document
+    file_id = file_info.file_id
+    file_name = file_info.file_name
+
+    # Запрос файла с использованием его file_id
+    file_info = bot.get_file(file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    # Сохранение файла локально
+    with open(file_name, 'wb') as new_file:
+        new_file.write(downloaded_file)
+
+    # Чтение содержимого файла
+    with open(file_name, 'r') as file:
+        file_content = file.read()
+
+    bot.reply_to(message, file_content)
+    os.remove(file_name)
+
+    """dummy_message = Message(
+        message_id=message.message_id,
+        from_user=message.from_user,
+        chat=message.chat,
+        date=message.date,
+        text=file_content
+    )
+
+    add_word_lambda = lambda m: add_word(file_content)
+    add_word_lambda(message)"""
+
+    jsonFunc.add_word_to_dt(file_content)
+    bot.send_message(message.chat.id, "Словарь обновлен!")
+
 
 def add_and_verify(message):
-    jsonFunc.add_word_to_dt(message)
+    jsonFunc.add_word_to_dt(message.text)
     bot.send_message(message.chat.id, "Словарь обновлен!")
 
 

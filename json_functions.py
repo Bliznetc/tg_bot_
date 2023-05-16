@@ -12,6 +12,9 @@ def create_answer_options():
 def add_word_to_dt(cur_text):
     arr = cur_text.split(';')
     for x in arr:
+        if (x.find('-') == -1):
+            continue;
+
         new_key = x.split('-')[0]
         new_meaning = x.split('-')[1]
 

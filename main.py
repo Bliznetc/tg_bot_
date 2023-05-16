@@ -65,22 +65,11 @@ def add_word_from_file (message):
         new_file.write(downloaded_file)
 
     # Чтение содержимого файла
-    with open(file_name, 'r') as file:
+    with open(file_name, 'r', encoding='utf-8') as file:
         file_content = file.read()
 
     bot.reply_to(message, file_content)
     os.remove(file_name)
-
-    """dummy_message = Message(
-        message_id=message.message_id,
-        from_user=message.from_user,
-        chat=message.chat,
-        date=message.date,
-        text=file_content
-    )
-
-    add_word_lambda = lambda m: add_word(file_content)
-    add_word_lambda(message)"""
 
     jsonFunc.add_word_to_dt(file_content)
     bot.send_message(message.chat.id, "Словарь обновлен!")
@@ -155,8 +144,6 @@ def set_interval(func, sec):
 def start_mailing(message):
     set_interval(send_quiz_spam, 10)
     bot.send_message(message.chat.id, "запустил рассылку")
-    print(threading.active_count(), "start")
-    
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):

@@ -70,8 +70,7 @@ def add_word_from_file (message):
 
     bot.reply_to(message, file_content)
     os.remove(file_name)
-
-    bot.send_message(message.chat.id, file_content)
+    
     jsonFunc.add_word_to_dt(file_content)
 
 

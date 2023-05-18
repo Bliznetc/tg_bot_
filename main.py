@@ -68,7 +68,7 @@ def add_word_from_file (message):
     with open(file_name, 'r', encoding='utf-8') as file:
         file_content = file.read()
 
-    bot.reply_to(message, file_content)
+    bot.reply_to(message, "Словарь обновлен")
     os.remove(file_name)
     
     jsonFunc.add_word_to_dt(file_content)

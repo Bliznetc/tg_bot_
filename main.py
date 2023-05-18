@@ -144,12 +144,15 @@ def start_mailing(message):
     set_interval(send_quiz_spam, 10)
     bot.send_message(message.chat.id, "запустил рассылку")
 
+
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
     t.cancel()
     bot.send_message(message.chat.id, "остановил рассылку")
 
+
 print(__name__)
+
 
 if __name__ == '__main__':
     bot.polling()

@@ -2,15 +2,20 @@ import json
 import random
 
 
+def myFuncSort(word):
+    return word['degree']
+
 def create_answer_options():
     with open("dictionary.json", "r", encoding="utf-8") as file:
         dictionary = json.load(file)
+
+    dictionary.sort(key=myFuncSort)
+
 
     return random.sample(dictionary, 4)
 
 
 def add_word_to_dt(cur_text):
-
     with open("dictionary.json", "r", encoding="utf-8") as file:
             dictionary = json.load(file)
 
@@ -35,7 +40,7 @@ def add_word_to_dt(cur_text):
 
         if f == 1:
             print("Добавил слово")
-            dictionary.append({'word': new_key, 'translation': new_meaning})
+            dictionary.append({'word': new_key, 'translation': new_meaning, 'degree': 0})
 
     with open("dictionary.json", "w") as file: #this code was outside of for
         json.dump(dictionary, file, indent=4)

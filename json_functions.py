@@ -19,7 +19,7 @@ def add_word_to_dt(cur_text):
         if x.find('-') == -1:
             continue
 
-        new_key, new_meaning = x.split('-')
+        new_key, new_meaning = x.split('-', 1)
 
         new_key = new_key.replace('\n', '')
         new_key = new_key.replace(' ', '')

@@ -32,11 +32,12 @@ def help_handler(message):
 # Define a function to handle the /whole_dict command
 @bot.message_handler(commands=['whole_dict'])
 def whole_dict_handler(message):
-    with open("dictionary.json", "r", encoding="utf-8") as file:
-        dictionary = json.load(file)
+    # with open("dictionary.json", "r", encoding="utf-8") as file:
+    #     dictionary = json.load(file)
 
-    for word in dictionary:
-        bot.send_message(message.chat.id, f"{word['word']} - {word['translation']}")
+    # for word in dictionary:
+    
+    bot.send_message(message.chat.id, "Меня пучит, поэтому нет:)")
 
 
 @bot.message_handler(commands=['info'])

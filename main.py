@@ -11,7 +11,7 @@ import json_functions as jsonFunc
 
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 
 # Define a function to handle the /start command
@@ -100,21 +100,13 @@ def generate_quiz():
 def send_quiz(message):
     word_number, answer_options = generate_quiz()
 
-    # Capitalizing words
     for answer in answer_options:
-        l = list(answer['word'])
-        l[0] = answer['word'][0].upper()
-        answer['word'] = "".join(l)
-
-    # Capitalizing translarions
-    for answer in answer_options:
-        l = list(answer['translation'])
-        l[0] = answer['translation'][0].upper()
-        answer['translation'] = "".join(l)
+        answer['word'] = answer['word'].capitalize()
+        answer['translation'] = answer['translation'].capitalize()
 
 
     # Отправка опроса в чат
-    quiz_text = f"{answer_options[word_number]['word']}\n\n"
+    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}\n"
 
     possible_answers = []
     for answer in answer_options:

@@ -9,8 +9,9 @@ import random
 from telebot import types
 import json_functions as jsonFunc
 
+
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 
 # Define a function to handle the /start command
@@ -80,40 +81,38 @@ def add_word_from_file (message):
 
 
 
-# generates quiz when user types "/quiz"
-def generate_quiz():
+# generates quiz when user types "/quiz" - что-то
+"""def generate_quiz():
     answer_options = jsonFunc.create_answer_options()
     word = random.choice(answer_options)
     print(answer_options)  # for debugging
     random.shuffle(answer_options)
     return word, answer_options
-
+"""
+def generate_quiz():
+    answer_options = jsonFunc.create_answer_options()
+    word_number = random.randint(0, 3)
+    print(answer_options)  # for debugging
+    return word_number, answer_options
 
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(message):
-    word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
-    for answer_option in answer_options:
-        quiz_keyboard.add(
-            types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-    bot.send_message(chat_id=message.chat.id, text=quiz_text, reply_markup=quiz_keyboard)
+    word_number, answer_options = generate_quiz()
 
+    for answer in answer_options:
+        answer['word'] = answer['word'].capitalize()
+        answer['translation'] = answer['translation'].capitalize()
 
-#sends quiz to every user
-def send_quiz_spam():
-    word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
-    for chat_id in const.chat_ids:
-        for answer_option in answer_options:
-            quiz_keyboard.add(
-                types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-        bot.send_message(chat_id=chat_id, text=quiz_text,
-                         reply_markup=quiz_keyboard)
-        
-        quiz_keyboard = types.InlineKeyboardMarkup()
+    # Отправка опроса в чат
+    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}?\n"
+
+    possible_answers = []
+    for answer in answer_options:
+        possible_answers.append(answer['translation'])
+
+    bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
+
 
 # checks quiz
 @bot.callback_query_handler(func=lambda call: True)
@@ -128,11 +127,11 @@ def check_quiz(call):
 
 
 #sets the interval for sending quizes
-def set_interval(func, sec):
+def set_interval(message, func, sec):
     print("Я вызвал set_interval")
     def func_wrapper():
-        set_interval(func, sec)
-        func()
+        set_interval(message, func, sec)
+        func(message)
 
     global t
     t = threading.Timer(sec, func_wrapper)
@@ -142,7 +141,7 @@ def set_interval(func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(send_quiz_spam, 300)
+    set_interval(message, send_quiz, 300)
     bot.send_message(message.chat.id, "запустил рассылку")
 
 
@@ -153,7 +152,6 @@ def stop_mailing(message):
 
 
 print(__name__)
-
 
 if __name__ == '__main__':
     bot.polling()

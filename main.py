@@ -122,19 +122,34 @@ def send_quiz(message):
 
     bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
 
+
 #sends quiz to every user
 def send_quiz_spam():
     word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
+    word_number, answer_options = generate_quiz()
+
+    # Capitalizing words
+    for answer in answer_options:
+        l = list(answer['word'])
+        l[0] = answer['word'][0].upper()
+        answer['word'] = "".join(l)
+
+    # Capitalizing translarions
+    for answer in answer_options:
+        l = list(answer['translation'])
+        l[0] = answer['translation'][0].upper()
+        answer['translation'] = "".join(l)
+
+    # Отправка опроса в чат
+    quiz_text = f"{answer_options[word_number]['word']}\n\n"
+
+    possible_answers = []
+    for answer in answer_options:
+        possible_answers.append(answer['translation'])
+
     for chat_id in const.chat_ids:
-        for answer_option in answer_options:
-            quiz_keyboard.add(
-                types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-        bot.send_message(chat_id=chat_id, text=quiz_text,
-                         reply_markup=quiz_keyboard)
-        
-        quiz_keyboard = types.InlineKeyboardMarkup()
+        bot.send_poll(chat_id, options=possible_answers, correct_option_id=word_number, type='quiz',
+                      question=quiz_text)
 
 # checks quiz
 @bot.callback_query_handler(func=lambda call: True)

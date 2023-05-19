@@ -10,7 +10,7 @@ from telebot import types
 import json_functions as jsonFunc
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
+bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 
 # Define a function to handle the /start command
@@ -49,6 +49,10 @@ def add_word(message):
     bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
     bot.register_next_step_handler(message, add_and_verify)
 
+def add_and_verify(message):
+    jsonFunc.add_word_to_dt(message.text)
+    bot.send_message(message.chat.id, "Словарь обновлен!")
+
 #Add words from files to the dict
 @bot.message_handler(content_types=['document'])
 def add_word_from_file (message):
@@ -68,15 +72,12 @@ def add_word_from_file (message):
     with open(file_name, 'r', encoding='utf-8') as file:
         file_content = file.read()
 
-    bot.reply_to(message, "Словарь обновлен")
     os.remove(file_name)
     
     jsonFunc.add_word_to_dt(file_content)
 
+    bot.reply_to(message, "Словарь обновлен")
 
-def add_and_verify(message):
-    jsonFunc.add_word_to_dt(message.text)
-    bot.send_message(message.chat.id, "Словарь обновлен!")
 
 
 # generates quiz when user types "/quiz"

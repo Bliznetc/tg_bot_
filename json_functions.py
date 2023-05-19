@@ -33,7 +33,7 @@ def add_word_to_dt(cur_text):
         #print(new_key, new_meaning, f)
 
         if f == 1:
-            print("Добавил слово")
+            # print("Добавил слово")
             dictionary.append({'word': new_key, 'translation': new_meaning, 'degree': 0})
 
     with open("dictionary.json", "w") as file:

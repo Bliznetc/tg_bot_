@@ -1,75 +1,5 @@
 [
     {
-        "word": "mama",
-        "translation": "\u043c\u0430\u043c\u0430",
-        "degree": 1
-    },
-    {
-        "word": "traktowa\u0107",
-        "translation": "\u043e\u0442\u043d\u043e\u0441\u0438\u0442\u044c\u0441\u044f",
-        "degree": 0
-    },
-    {
-        "word": "obejmowa\u0107",
-        "translation": "\u0432\u043a\u043b\u044e\u0447\u0430\u0442\u044c",
-        "degree": 0
-    },
-    {
-        "word": "twardziel",
-        "translation": "\u043a\u0440\u0443\u0442\u043e\u0439 \u043f\u0430\u0440\u0435\u043d\u044c",
-        "degree": 0
-    },
-    {
-        "word": "losowy",
-        "translation": "\u0441\u043b\u0443\u0447\u0430\u0439\u043d\u044b\u0439",
-        "degree": 0
-    },
-    {
-        "word": "przysparza\u0107",
-        "translation": "\u043f\u0440\u0438\u0447\u0438\u043d\u044f\u0442\u044c",
-        "degree": 0
-    },
-    {
-        "word": "ssak",
-        "translation": "\u043c\u043b\u0435\u043a\u043e\u043f\u0438\u0442\u0430\u044e\u0449\u0435\u0435",
-        "degree": 0
-    },
-    {
-        "word": "hodowla",
-        "translation": "\u0440\u0430\u0437\u0432\u0435\u0434\u0435\u043d\u0438\u0435",
-        "degree": 0
-    },
-    {
-        "word": "badanie",
-        "translation": "\u0438\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u043d\u0438\u0435",
-        "degree": 0
-    },
-    {
-        "word": "siedlisko",
-        "translation": "\u0436\u0438\u043b\u0438\u0449\u0435",
-        "degree": 0
-    },
-    {
-        "word": "\u00f3w",
-        "translation": "\u0442\u043e\u0442",
-        "degree": 0
-    },
-    {
-        "word": "los",
-        "translation": "\u0441\u0443\u0434\u044c\u0431\u0430",
-        "degree": 0
-    },
-    {
-        "word": "oboj\u0119ntny",
-        "translation": "\u0431\u0435\u0437\u0440\u0430\u0437\u043b\u0438\u0447\u043d\u044b\u0439, \u0440\u0430\u0432\u043d\u043e\u0434\u0443\u0448\u043d\u044b\u0439",
-        "degree": 0
-    },
-    {
-        "word": "poci\u0105gaj\u0105cy",
-        "translation": "\u043f\u0440\u0438\u0442\u044f\u0433\u0438\u0432\u0430\u044e\u0449\u0438\u0439",
-        "degree": 0
-    },
-    {
         "word": "s\u0142u\u017cy\u0107",
         "translation": "\u0441\u043b\u0443\u0436\u0438\u0442\u044c",
         "degree": 0
@@ -116,7 +46,7 @@
     },
     {
         "word": "kolczyk",
-        "translation": "\u0441\u0435\u0440\u044c\u0433\u0430",
+        "translation": "\u0441\u0435\u0440\u044c\u0433\u0430\t",
         "degree": 0
     },
     {
@@ -1050,8 +980,68 @@
         "degree": 0
     },
     {
-        "word": "cze\u015b\u0107",
-        "translation": "\u043f\u0440\u0438\u0432\u0435\u0442",
+        "word": "badanie",
+        "translation": "\u0438\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u043d\u0438\u0435",
+        "degree": 0
+    },
+    {
+        "word": "siedlisko",
+        "translation": "\u0436\u0438\u043b\u0438\u0449\u0435",
+        "degree": 0
+    },
+    {
+        "word": "przysparza\u0107",
+        "translation": "\u043f\u0440\u0438\u0447\u0438\u043d\u044f\u0442\u044c",
+        "degree": 0
+    },
+    {
+        "word": "ssak",
+        "translation": "\u043c\u043b\u0435\u043a\u043e\u043f\u0438\u0442\u0430\u044e\u0449\u0435\u0435",
+        "degree": 0
+    },
+    {
+        "word": "hodowla",
+        "translation": "\u0440\u0430\u0437\u0432\u0435\u0434\u0435\u043d\u0438\u0435",
+        "degree": 0
+    },
+    {
+        "word": "losowy",
+        "translation": "\u0441\u043b\u0443\u0447\u0430\u0439\u043d\u044b\u0439",
+        "degree": 0
+    },
+    {
+        "word": "\u00f3w",
+        "translation": "\u0442\u043e\u0442",
+        "degree": 0
+    },
+    {
+        "word": "los",
+        "translation": "\u0441\u0443\u0434\u044c\u0431\u0430",
+        "degree": 0
+    },
+    {
+        "word": "oboj\u0119ntny",
+        "translation": "\u0431\u0435\u0437\u0440\u0430\u0437\u043b\u0438\u0447\u043d\u044b\u0439, \u0440\u0430\u0432\u043d\u043e\u0434\u0443\u0448\u043d\u044b\u0439",
+        "degree": 0
+    },
+    {
+        "word": "poci\u0105gaj\u0105cy",
+        "translation": "\u043f\u0440\u0438\u0442\u044f\u0433\u0438\u0432\u0430\u044e\u0449\u0438\u0439",
+        "degree": 0
+    },
+    {
+        "word": "twardziel",
+        "translation": "\u043a\u0440\u0443\u0442\u043e\u0439 \u043f\u0430\u0440\u0435\u043d\u044c",
+        "degree": 0
+    },
+    {
+        "word": "obejmowa\u0107",
+        "translation": "\u0432\u043a\u043b\u044e\u0447\u0430\u0442\u044c",
+        "degree": 0
+    },
+    {
+        "word": "traktowa\u0107",
+        "translation": "\u043e\u0442\u043d\u043e\u0441\u0438\u0442\u044c\u0441\u044f",
         "degree": 0
     }
 ]

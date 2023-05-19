@@ -142,7 +142,7 @@ def set_interval(func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(send_quiz_spam, 10)
+    set_interval(send_quiz_spam, 300)
     bot.send_message(message.chat.id, "запустил рассылку")
 
 

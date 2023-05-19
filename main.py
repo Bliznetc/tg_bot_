@@ -81,7 +81,7 @@ def add_word_from_file (message):
 
 
 
-# generates quiz when user types "/quiz"
+# generates quiz when user types "/quiz" - что-то
 """def generate_quiz():
     answer_options = jsonFunc.create_answer_options()
     word = random.choice(answer_options)
@@ -104,9 +104,8 @@ def send_quiz(message):
         answer['word'] = answer['word'].capitalize()
         answer['translation'] = answer['translation'].capitalize()
 
-
     # Отправка опроса в чат
-    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}\n"
+    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}?\n"
 
     possible_answers = []
     for answer in answer_options:
@@ -114,34 +113,6 @@ def send_quiz(message):
 
     bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
 
-
-#sends quiz to every user
-def send_quiz_spam():
-    word, answer_options = generate_quiz()
-    word_number, answer_options = generate_quiz()
-
-    # Capitalizing words
-    for answer in answer_options:
-        l = list(answer['word'])
-        l[0] = answer['word'][0].upper()
-        answer['word'] = "".join(l)
-
-    # Capitalizing translarions
-    for answer in answer_options:
-        l = list(answer['translation'])
-        l[0] = answer['translation'][0].upper()
-        answer['translation'] = "".join(l)
-
-    # Отправка опроса в чат
-    quiz_text = f"{answer_options[word_number]['word']}\n\n"
-
-    possible_answers = []
-    for answer in answer_options:
-        possible_answers.append(answer['translation'])
-
-    for chat_id in const.chat_ids:
-        bot.send_poll(chat_id, options=possible_answers, correct_option_id=word_number, type='quiz',
-                      question=quiz_text)
 
 # checks quiz
 @bot.callback_query_handler(func=lambda call: True)
@@ -156,11 +127,11 @@ def check_quiz(call):
 
 
 #sets the interval for sending quizes
-def set_interval(func, sec):
+def set_interval(message, func, sec):
     print("Я вызвал set_interval")
     def func_wrapper():
-        set_interval(func, sec)
-        func()
+        set_interval(message, func, sec)
+        func(message)
 
     global t
     t = threading.Timer(sec, func_wrapper)
@@ -170,7 +141,7 @@ def set_interval(func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(send_quiz_spam, 300)
+    set_interval(message, send_quiz, 300)
     bot.send_message(message.chat.id, "запустил рассылку")
 
 
@@ -181,7 +152,6 @@ def stop_mailing(message):
 
 
 print(__name__)
-
 
 if __name__ == '__main__':
     bot.polling()

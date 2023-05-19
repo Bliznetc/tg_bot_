@@ -1,12 +1,14 @@
 import json
+import os
 import threading
 
 import telebot
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
 import random
 from telebot import types
 import json_functions as jsonFunc
+
 
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
@@ -23,8 +25,8 @@ def start_handler(message):
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
 def help_handler(message):
-    bot.reply_to(message, 'Type\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
-                '"/start_mailing" - to start getting quizes')
+    bot.reply_to(message, 'Type:\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
+                '"/start_mailing" - to start getting quizes\n "/stop_mailing" - to stop mailing' )
 
 
 # Define a function to handle the /whole_dict command
@@ -48,61 +50,69 @@ def add_word(message):
     bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
     bot.register_next_step_handler(message, add_and_verify)
 
-
 def add_and_verify(message):
-    jsonFunc.add_word_to_dt(message)
+    jsonFunc.add_word_to_dt(message.text)
     bot.send_message(message.chat.id, "Словарь обновлен!")
 
+#Add words from files to the dict
+@bot.message_handler(content_types=['document'])
+def add_word_from_file (message):
+    file_info = message.document
+    file_id = file_info.file_id
+    file_name = file_info.file_name
 
-# generates quiz when user types "/quiz"
-def generate_quiz():
+    # Запрос файла с использованием его file_id
+    file_info = bot.get_file(file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    # Сохранение файла локально
+    with open(file_name, 'wb') as new_file:
+        new_file.write(downloaded_file)
+
+    # Чтение содержимого файла
+    with open(file_name, 'r', encoding='utf-8') as file:
+        file_content = file.read()
+
+    os.remove(file_name)
+    
+    jsonFunc.add_word_to_dt(file_content)
+
+    bot.reply_to(message, "Словарь обновлен")
+
+
+
+# generates quiz when user types "/quiz" - что-то
+"""def generate_quiz():
     answer_options = jsonFunc.create_answer_options()
     word = random.choice(answer_options)
     print(answer_options)  # for debugging
     random.shuffle(answer_options)
     return word, answer_options
-
+"""
+def generate_quiz():
+    answer_options = jsonFunc.create_answer_options()
+    word_number = random.randint(0, 3)
+    print(answer_options)  # for debugging
+    return word_number, answer_options
 
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(message):
-    word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
-    for answer_option in answer_options:
-        quiz_keyboard.add(
-            types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-    bot.send_message(chat_id=message.chat.id, text=quiz_text, reply_markup=quiz_keyboard)
+    word_number, answer_options = generate_quiz()
 
+    for answer in answer_options:
+        answer['word'] = answer['word'].capitalize()
+        answer['translation'] = answer['translation'].capitalize()
 
-#--------------------------
-#эта функция по-моему вообще не используется, не помню для чего я ее написал
-def send_quiz_via_chatid(chat_id):
-    word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
-    for answer_option in answer_options:
-        quiz_keyboard.add(
-            types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-    bot.send_message(chat_id=chat_id, text=quiz_text,
-                     reply_markup=quiz_keyboard)  # здесь была ошибка, так как функция принимала именные аргументы,
-                                                    # а ты передал позиционный
-#-----------------------------
+    # Отправка опроса в чат
+    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}?\n"
 
+    possible_answers = []
+    for answer in answer_options:
+        possible_answers.append(answer['translation'])
 
-#sends quiz to every user
-def send_quiz_spam():
-    word, answer_options = generate_quiz()
-    quiz_text = f"What is the Russian translation of the word '{word['word']}'?\n\n"
-    quiz_keyboard = types.InlineKeyboardMarkup()
-    for chat_id in const.chat_ids:
-        for answer_option in answer_options:
-            quiz_keyboard.add(
-                types.InlineKeyboardButton(answer_option['translation'], callback_data=str(answer_option == word)))
-        bot.send_message(chat_id=chat_id, text=quiz_text,
-                         reply_markup=quiz_keyboard)
-        
-        quiz_keyboard = types.InlineKeyboardMarkup()
+    bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
+
 
 # checks quiz
 @bot.callback_query_handler(func=lambda call: True)
@@ -115,13 +125,15 @@ def check_quiz(call):
     bot.answer_callback_query(callback_query_id=call.id, text=message_text)
 
 
+
 #sets the interval for sending quizes
-def set_interval(func, sec):
+def set_interval(message, func, sec):
     print("Я вызвал set_interval")
     def func_wrapper():
-        set_interval(func, sec)
-        func()
+        set_interval(message, func, sec)
+        func(message)
 
+    global t
     t = threading.Timer(sec, func_wrapper)
     t.start()
     return t
@@ -129,13 +141,15 @@ def set_interval(func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(send_quiz_spam, 10)
+    set_interval(message, send_quiz, 300)
     bot.send_message(message.chat.id, "запустил рассылку")
+
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
-    set_interval(send_quiz_spam, 4) #запускает второй поток
+    t.cancel()
     bot.send_message(message.chat.id, "остановил рассылку")
+
 
 print(__name__)
 

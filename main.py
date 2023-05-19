@@ -11,7 +11,7 @@ import json_functions as jsonFunc
 
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
+bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 
 # Define a function to handle the /start command

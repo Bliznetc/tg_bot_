@@ -5,9 +5,9 @@ import random
 def create_answer_options():
     with open("dictionary.json", "r", encoding="utf-8") as file:
         dictionary = json.load(file)
-
+    dictionary.sort(key=lambda x: x['degree'])
     #using lambda 
-    return random.sample(dictionary.sort(key=lambda x: x['degree']) , 4)
+    return random.sample(dictionary, 4)
 
 
 def add_word_to_dt(cur_text):

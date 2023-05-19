@@ -22,7 +22,6 @@ def add_word_to_dt(cur_text):
         new_key, new_meaning = x.split('-', 1)
 
         new_key = new_key.replace('\n', '')
-        new_key = new_key.replace(' ', '')
         new_key = new_key.lower()
 
         f = 1

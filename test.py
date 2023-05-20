@@ -36,5 +36,46 @@ def store(user_id: int, access: str, dt: dict):
 with open("dictionary.json", "r", encoding="utf-8") as file:
     data = json.load(file)
 
-store(955008318, "developer", data) #эта штука работает, твой словарь уже лежит на бд,
-#осталось только сделать так для каждого нового chat_id и можно трахать 
+#store(955008318, "developer", data) #эта штука работает, твой словарь уже лежит на бд,
+#осталось только сделать так для каждого нового chat_id и можно трахать
+
+def get_words():
+    connection = connect_database()
+    cursor = connection.cursor()
+
+    # Выполнение SQL-запроса
+    query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = 955008318"
+    cursor.execute(query)
+
+    # Получение результатов
+    cur_dictionary_json = cursor.fetchall()
+    data = cur_dictionary_json[0][0]
+
+    # Преобразование строки JSON в список
+    json_data = json.loads(data)
+
+    cursor.close()
+    connection.close()
+    return json_data
+
+
+def add_word_to_bd(new_key, new_meaning):
+    connection = connect_database()
+    cursor = connection.cursor()
+
+    # Выполнение SQL-запроса
+    new_item = f'{"word": {new_key}, "degree": 0, "translation": {new_meaning}}'
+    user_id = 955008318
+
+    query = "UPDATE User_Dictionaries SET dictionary = JSON_ARRAY_APPEND(dictionary, '$', %s) WHERE user_id = %s"
+    cursor.execute(query, (new_item, user_id))
+
+    connection.commit()
+
+    # Выведите сообщение об успешном добавлении
+    print("Элемент успешно добавлен в ячейку базы данных.")
+
+    cursor.close()
+    connection.close()
+
+add_word_to_bd("mama", "мама")

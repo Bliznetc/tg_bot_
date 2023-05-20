@@ -98,7 +98,7 @@ def send_quiz(message):
         answer['translation'] = answer['translation'].capitalize()
 
     # Отправка опроса в чат
-    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}?\n"
+    quiz_text = f"Какой перевод у слова: {answer_options[word_number]['word']}?\n"
     possible_answers = []
     for answer in answer_options:
         possible_answers.append(answer['translation'])

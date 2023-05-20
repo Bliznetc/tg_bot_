@@ -15,7 +15,7 @@ def create_answer_options():
 
 print(create_answer_options())
 
-def add_word_to_dt(cur_text):
+def add_word_to_dt(cur_text, user_id = 745553839):
     #with open("dictionary.json", "r", encoding="utf-8") as file:
     #        dictionary = json.load(file)
 
@@ -39,7 +39,7 @@ def add_word_to_dt(cur_text):
 
         if f == 1:
             # print("Добавил слово")
-            test.add_word_to_bd(new_key, new_meaning)
+            test.add_word_to_bd(new_key, new_meaning, user_id)
             # dictionary.append({'word': new_key, 'translation': new_meaning, 'degree': 0})
 
     #with open("dictionary.json", "w") as file:

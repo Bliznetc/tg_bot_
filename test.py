@@ -59,16 +59,19 @@ def get_words():
     return json_data
 
 
-def add_word_to_bd(new_key, new_meaning):
+def add_word_to_bd(new_key, new_meaning, user_id):
     connection = connect_database()
     cursor = connection.cursor()
 
     # Выполнение SQL-запроса
-    new_item = f'{"word": {new_key}, "degree": 0, "translation": {new_meaning}}'
-    user_id = 955008318
+    new_item = {
+        "word": new_key,
+        "degree": 0,
+        "translation": new_meaning
+    }
 
-    query = "UPDATE User_Dictionaries SET dictionary = JSON_ARRAY_APPEND(dictionary, '$', %s) WHERE user_id = %s"
-    cursor.execute(query, (new_item, user_id))
+    query = "UPDATE User_Dictionaries SET dictionary = JSON_ARRAY_APPEND(dictionary, '$', CAST(%s AS JSON)) WHERE user_id = %s"
+    cursor.execute(query, (json.dumps(new_item), user_id))
 
     connection.commit()
 
@@ -77,5 +80,3 @@ def add_word_to_bd(new_key, new_meaning):
 
     cursor.close()
     connection.close()
-
-add_word_to_bd("mama", "мама")

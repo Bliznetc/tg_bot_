@@ -133,9 +133,16 @@ def set_interval(message, func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(message, send_quiz, 300)
-    bot.send_message(message.chat.id, "запустил рассылку")
+    bot.send_message(message.chat.id, "введите, как часто Вы хотите, чтобы приходили квизы(в минутых)")
+    bot.register_next_step_handler(message, start_mailing_time)
 
+
+def start_mailing_time (message):
+    minutes = int(message.text)
+
+    #запуск рассылки, время переводится в секунды
+    set_interval(message, send_quiz, minutes * 60)
+    bot.send_message(message.chat.id, "запустил рассылку")
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):

@@ -81,32 +81,24 @@ def add_word_from_file (message):
 
 
 
-# generates quiz when user types "/quiz" - что-то
-"""def generate_quiz():
-    answer_options = jsonFunc.create_answer_options()
-    word = random.choice(answer_options)
-    print(answer_options)  # for debugging
-    random.shuffle(answer_options)
-    return word, answer_options
-"""
+# generates quiz when user types "/quiz"
 def generate_quiz():
     answer_options = jsonFunc.create_answer_options()
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging
     return word_number, answer_options
 
+
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(message):
     word_number, answer_options = generate_quiz()
-
     for answer in answer_options:
         answer['word'] = answer['word'].capitalize()
         answer['translation'] = answer['translation'].capitalize()
 
     # Отправка опроса в чат
     quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}?\n"
-
     possible_answers = []
     for answer in answer_options:
         possible_answers.append(answer['translation'])

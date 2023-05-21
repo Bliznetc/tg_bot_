@@ -1,11 +1,8 @@
 import json
 import mysql.connector
 
-#удаление словаря
-def delete_dictionary():
-    with open("dictionary.json", "w") as file:
-        json.dump([], file)
 
+# удаление словаря
 def connect_database():
     connection = mysql.connector.connect(
         host="containers-us-west-112.railway.app",
@@ -16,29 +13,32 @@ def connect_database():
     )
     return connection
 
-def store(user_id: int, access: str, dt: dict):
+
+# Добавляет пользователя в database
+def store(user_id: int, access: str, mailing: bool):
     connection = connect_database()
     cursor = connection.cursor()
 
     # Convert dictionary to JSON string
-    json_data = json.dumps(dt)
+    empty_json = {}
 
+    # Преобразование JSON-объекта в строку
+    json_data = json.dumps(empty_json)
+
+    # user_id = 745553838
+    print(user_id, access, json_data, mailing)
     # Insert user data into the database
-    query = "INSERT INTO User_Dictionaries (user_id, access, dictionary) VALUES (%s, %s, %s)"
-    cursor.execute(query, (user_id, access, json_data))
+    query = "INSERT INTO User_Dictionaries (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
+    cursor.execute(query, (user_id, access, json_data, mailing))
 
     # Commit the changes and close the connection
     connection.commit()
+
     cursor.close()
     connection.close()
 
 
-with open("dictionary.json", "r", encoding="utf-8") as file:
-    data = json.load(file)
-
-#store(955008318, "developer", data) #эта штука работает, твой словарь уже лежит на бд,
-#осталось только сделать так для каждого нового chat_id и можно трахать
-
+# Получает все слова
 def get_words():
     connection = connect_database()
     cursor = connection.cursor()
@@ -59,6 +59,7 @@ def get_words():
     return json_data
 
 
+# Добавляет слово в database
 def add_word_to_bd(new_key, new_meaning, user_id):
     connection = connect_database()
     cursor = connection.cursor()
@@ -80,3 +81,56 @@ def add_word_to_bd(new_key, new_meaning, user_id):
 
     cursor.close()
     connection.close()
+
+
+# Возвращает значение Mailing
+def started_mailing(current_user_id):
+    connection = connect_database()
+    cursor = connection.cursor()
+
+    query = f"SELECT Mailing FROM User_Dictionaries WHERE user_id = {current_user_id}"
+    cursor.execute(query)
+
+    # Получение результатов
+    cur_json = cursor.fetchall()
+    return cur_json[0][0]
+
+
+# обновляет значение Mailing
+def update_mailing(current_user_id, new_value):
+    connection = connect_database()
+    cursor = connection.cursor()
+
+    # Выполнение SQL-запроса
+    query = f"UPDATE User_Dictionaries SET Mailing = {int(new_value)} WHERE user_id = {current_user_id}"
+    cursor.execute(query)
+
+    connection.commit()
+
+    # Выведите сообщение об успешном добавлении
+    print("Изменил значение Mailing")
+
+    cursor.close()
+    connection.close()
+
+
+# Проверяет, существует ли user с указанным id
+def check_user_exists(user_id):
+    connection = connect_database()
+    cursor = connection.cursor()
+
+    # Выполнение SQL-запроса
+    query = f"SELECT COUNT(*) FROM User_Dictionaries WHERE user_id = {user_id}"
+    cursor.execute(query)
+
+    # Получение результата
+    result = cursor.fetchone()[0]
+
+    cursor.close()
+    connection.close()
+    if result == 0:
+        return False
+    else:
+        return True
+
+

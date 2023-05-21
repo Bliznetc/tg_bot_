@@ -5,8 +5,6 @@ import test
 
 
 def create_answer_options():
-    #with open("dictionary.json", "r", encoding="utf-8") as file:
-    #    dictionary = json.load(file)
     dictionary = test.get_words()
     dictionary.sort(key=lambda x: x['degree'])
     #using lambda
@@ -15,10 +13,8 @@ def create_answer_options():
 
 print(create_answer_options())
 
-def add_word_to_dt(cur_text, user_id = 745553839):
-    #with open("dictionary.json", "r", encoding="utf-8") as file:
-    #        dictionary = json.load(file)
 
+def add_word_to_dt(cur_text, user_id=745553839):
     arr = cur_text.split(';')
     for x in arr:
         if x.find('-') == -1:

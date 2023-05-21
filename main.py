@@ -11,7 +11,7 @@ import json_functions as jsonFunc
 
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 
 # Define a function to handle the /start command
@@ -82,32 +82,24 @@ def add_word_from_file (message):
 
 
 
-# generates quiz when user types "/quiz" - что-то
-"""def generate_quiz():
-    answer_options = jsonFunc.create_answer_options()
-    word = random.choice(answer_options)
-    print(answer_options)  # for debugging
-    random.shuffle(answer_options)
-    return word, answer_options
-"""
+# generates quiz when user types "/quiz"
 def generate_quiz():
     answer_options = jsonFunc.create_answer_options()
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging
     return word_number, answer_options
 
+
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(message):
     word_number, answer_options = generate_quiz()
-
     for answer in answer_options:
         answer['word'] = answer['word'].capitalize()
         answer['translation'] = answer['translation'].capitalize()
 
     # Отправка опроса в чат
-    quiz_text = f"What is the translation of the word: {answer_options[word_number]['word']}?\n"
-
+    quiz_text = f"Какой перевод у слова: {answer_options[word_number]['word']}?\n"
     possible_answers = []
     for answer in answer_options:
         possible_answers.append(answer['translation'])
@@ -142,9 +134,16 @@ def set_interval(message, func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    set_interval(message, send_quiz, 300)
-    bot.send_message(message.chat.id, "запустил рассылку")
+    bot.send_message(message.chat.id, "введите, как часто Вы хотите, чтобы приходили квизы(в минутых)")
+    bot.register_next_step_handler(message, start_mailing_time)
 
+
+def start_mailing_time (message):
+    minutes = int(message.text)
+
+    #запуск рассылки, время переводится в секунды
+    set_interval(message, send_quiz, minutes * 60)
+    bot.send_message(message.chat.id, "запустил рассылку")
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):

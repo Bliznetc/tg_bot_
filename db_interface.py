@@ -69,20 +69,15 @@ def get_words():
     return dictionary
 
 
-# Добавляет слово в database
-def add_word_to_bd(new_key, new_meaning, user_id):
+# Добавляет спииоск слов в database
+def add_word_to_bd(arr: list, user_id):
     connection = connect_database()
     cursor = connection.cursor()
 
-    # Выполнение SQL-запроса
-    new_item = {
-        "word": new_key,
-        "degree": 0,
-        "translation": new_meaning
-    }
+    new_dict = [{"word": item[0], "degree": 0, "translation": item[1]} for item in arr]
 
     query = "UPDATE User_Dictionaries SET dictionary = JSON_ARRAY_APPEND(dictionary, '$', CAST(%s AS JSON)) WHERE user_id = %s"
-    cursor.execute(query, (json.dumps(new_item), user_id))
+    cursor.execute(query, (json.dumps(new_dict), user_id))
 
     connection.commit()
 

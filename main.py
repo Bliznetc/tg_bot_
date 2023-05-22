@@ -8,7 +8,7 @@ import constants as const
 import random
 from telebot import types
 import json_functions as jsonFunc
-import test
+import db_interface
 
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
@@ -19,7 +19,7 @@ bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    test.store(message.chat.id, "user", 0)
+    db_interface.store(message.chat.id, "user", 0)
     bot.reply_to(message, 'Welcome to my bot!', reply_markup=menu_keyboard)
 
 
@@ -143,21 +143,21 @@ def start_mailing_time (message):
     minutes = int(message.text)
 
     #запуск рассылки, время переводится в секунды
-    f = test.started_mailing(message.chat.id)
+    f = db_interface.started_mailing(message.chat.id)
     if f == 0:
         set_interval(message, send_quiz, minutes * 60)
         bot.send_message(message.chat.id, "запустил рассылку")
-        test.update_mailing(message.chat.id, 1)
+        db_interface.update_mailing(message.chat.id, 1)
     else:
         bot.send_message(message.chat.id, "у Вас уже запущена рассылка")
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
-    f = test.started_mailing(message.chat.id)
+    f = db_interface.started_mailing(message.chat.id)
     if f == 1:
         t.cancel()
         bot.send_message(message.chat.id, "остановил рассылку")
-        test.update_mailing(message.chat.id, 0)
+        db_interface.update_mailing(message.chat.id, 0)
     else:
         bot.send_message(message.chat.id, "у Вас не запущена рассылка")
 

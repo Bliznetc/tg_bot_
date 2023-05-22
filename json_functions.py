@@ -1,11 +1,11 @@
 import json
 import random
 
-import test
+import db_interface
 
 
 def create_answer_options():
-    dictionary = test.get_words()
+    dictionary = db_interface.get_words()
     dictionary.sort(key=lambda x: x['degree'])
     #using lambda
     return random.sample(dictionary, 4)
@@ -35,7 +35,7 @@ def add_word_to_dt(cur_text, user_id=745553839):
 
         if f == 1:
             # print("Добавил слово")
-            test.add_word_to_bd(new_key, new_meaning, user_id)
+            db_interface.add_word_to_bd(new_key, new_meaning, user_id)
             # dictionary.append({'word': new_key, 'translation': new_meaning, 'degree': 0})
 
     #with open("dictionary.json", "w") as file:

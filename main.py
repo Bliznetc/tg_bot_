@@ -27,8 +27,9 @@ def start_handler(message):
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
 def help_handler(message):
-    bot.reply_to(message, 'Type:\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
-                '"/start_mailing" - to start getting quizes\n "/stop_mailing" - to stop mailing' )
+    bot.reply_to(message,
+                 'Type:\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
+                 '"/start_mailing" - to start getting quizes\n "/stop_mailing" - to stop mailing')
 
 
 # Define a function to handle the /whole_dict command
@@ -43,14 +44,16 @@ def add_word(message):
     bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
     bot.register_next_step_handler(message, add_and_verify)
 
+
 def add_and_verify(message):
     listOfNewWords = pr.prepare_text(message.text)
     db_interface.add_word_to_bd(listOfNewWords, message.chat.id)
     bot.send_message(message.chat.id, "Словарь обновлен!")
 
-#Add words from files to the dict
+
+# Add words from files to the dict
 @bot.message_handler(content_types=['document'])
-def add_word_from_file (message):
+def add_word_from_file(message):
     file_info = message.document
     file_id = file_info.file_id
     file_name = file_info.file_name
@@ -66,9 +69,9 @@ def add_word_from_file (message):
     # Чтение содержимого файла
     with open(file_name, 'r', encoding='utf-8') as file:
         file_content = file.read()
-    
+
     os.remove(file_name)
-    
+
     listOfNewWords = pr.prepare_text(file_content)
     db_interface.add_word_to_bd(listOfNewWords, message.chat.id)
 
@@ -98,13 +101,14 @@ def send_quiz(message):
     quiz_text = f"Какой перевод у слова: {answer_options[word_number]['word']}?\n"
     possible_answers = [answer['translation'] for answer in answer_options]
 
-    bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
+    bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz',
+                  question=quiz_text)
 
 
-
-#sets the interval for sending quizes
+# sets the interval for sending quizes
 def set_interval(message, func, sec):
     print("Я вызвал set_interval")
+
     def func_wrapper():
         set_interval(message, func, sec)
         func(message)
@@ -122,10 +126,10 @@ def start_mailing(message):
     bot.register_next_step_handler(message, start_mailing_time)
 
 
-def start_mailing_time (message):
+def start_mailing_time(message):
     minutes = int(message.text)
 
-    #запуск рассылки, время переводится в секунды
+    # запуск рассылки, время переводится в секунды
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
         set_interval(message, send_quiz, minutes * 60)
@@ -133,6 +137,7 @@ def start_mailing_time (message):
         db_interface.update_mailing(message.chat.id, 1)
     else:
         bot.send_message(message.chat.id, "У вас уже запущена рассылка")
+
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
@@ -150,13 +155,3 @@ print(__name__)
 if __name__ == '__main__':
     bot.polling()
 
-
-
-# Кстати этот сервис который на м хостит бота, также может хостить БД, что можно использовать для хранения id чатов и
-# отдельных словарей для пользователей
-
-# B последнее, было бы неплохо изменить /add_word, чтобы он можно было закидывать много слов (например "слово1-перевод1;
-# слово2-перевод2;..."), а также добавить
-# возможность закидывать файл
-
-# постараюсь добавить всё в issues, чтобы оно просто висело, а то заметки в коде - это пиздец

@@ -1,6 +1,7 @@
 import json
 import os
 import threading
+import time
 
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
@@ -19,8 +20,8 @@ bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    db_interface.store(message.chat.id, "user", 0)
-    bot.reply_to(message, 'Welcome to my bot!', reply_markup=menu_keyboard)
+    reply_text = db_interface.store(message.chat.id, "user", 0)
+    bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
 # Define a function to handle the /help command
@@ -33,16 +34,7 @@ def help_handler(message):
 # Define a function to handle the /whole_dict command
 @bot.message_handler(commands=['whole_dict'])
 def whole_dict_handler(message):
-    with open("dictionary.json", "r", encoding="utf-8") as file:
-        dictionary = json.load(file)
-
-    for word in dictionary:
-        bot.send_message(message.chat.id, f"{word['word']} - {word['translation']}")
-
-
-@bot.message_handler(commands=['info'])
-def info_handler(message):
-    bot.reply_to(message, 'Rostislav Budarin - Lepshy')
+    bot.send_message(message.chat.id, "Nope")
 
 
 # adds word to the dictionary.json file
@@ -81,10 +73,12 @@ def add_word_from_file (message):
     bot.reply_to(message, "Словарь обновлен")
 
 
-
 # generates quiz when user types "/quiz"
 def generate_quiz():
-    answer_options = jsonFunc.create_answer_options()
+    # it takes 3.5 seconds to execute this function, 2.5 of which are dedicated to connect to db
+    dictionary = db_interface.get_words()
+    # dictionary.sort(key=lambda x: x['degree']) - не имеет смысла, так как мы и так берём все слова в рандом
+    answer_options = random.sample(dictionary, 4)
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging
     return word_number, answer_options
@@ -100,22 +94,21 @@ def send_quiz(message):
 
     # Отправка опроса в чат
     quiz_text = f"Какой перевод у слова: {answer_options[word_number]['word']}?\n"
-    possible_answers = []
-    for answer in answer_options:
-        possible_answers.append(answer['translation'])
+    possible_answers = [answer['translation'] for answer in answer_options]
 
     bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
 
+#Мы больше это не используем
 
-# checks quiz
-@bot.callback_query_handler(func=lambda call: True)
-def check_quiz(call):
-    is_correct = call.data == "True"
-    if is_correct:
-        message_text = "Correct answer!"
-    else:
-        message_text = "Sorry, that was incorrect."
-    bot.answer_callback_query(callback_query_id=call.id, text=message_text)
+# # checks quiz
+# @bot.callback_query_handler(func=lambda call: True)
+# def check_quiz(call):
+#     is_correct = call.data == "True"
+#     if is_correct:
+#         message_text = "Correct answer!"
+#     else:
+#         message_text = "Sorry, that was incorrect."
+#     bot.answer_callback_query(callback_query_id=call.id, text=message_text)
 
 
 
@@ -149,7 +142,7 @@ def start_mailing_time (message):
         bot.send_message(message.chat.id, "запустил рассылку")
         db_interface.update_mailing(message.chat.id, 1)
     else:
-        bot.send_message(message.chat.id, "у Вас уже запущена рассылка")
+        bot.send_message(message.chat.id, "У вас уже запущена рассылка")
 
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):

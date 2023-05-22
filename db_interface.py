@@ -1,5 +1,7 @@
 import json
 import mysql.connector
+import random
+import time #was used to calculate the time 
 
 
 # удаление словаря
@@ -19,23 +21,30 @@ def store(user_id: int, access: str, mailing: bool):
     connection = connect_database()
     cursor = connection.cursor()
 
-    # Здесь должен быть пустой список
-    # empty_json = {}
+    #new_block
+    query_check = "SELECT user_id FROM User_Dictionaries"
+    cursor.execute(query_check)
+    data = [i[0] for i in cursor.fetchall()]
+    # print(data)
 
-    # Преобразование JSON-объекта в строку
-    json_data = json.dumps([])
+    if user_id in data:
+        cursor.close()
+        connection.close()
+        return "Вы уже зарегестрированы"
+    else:    
+        json_data = json.dumps([])
 
-    # user_id = 745553838
-    print(user_id, access, json_data, mailing)
-    # Insert user data into the database
-    query = "INSERT INTO User_Dictionaries (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
-    cursor.execute(query, (user_id, access, json_data, mailing))
+        print(user_id, access, json_data, mailing)
+        # Insert user data into the database
+        query = "INSERT INTO User_Dictionaries (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (user_id, access, json_data, mailing))
 
-    # Commit the changes and close the connection
-    connection.commit()
+        # Commit the changes and close the connection
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return "Добро пожаловать!"
 
-    cursor.close()
-    connection.close()
 
 
 # Получает все слова
@@ -51,12 +60,13 @@ def get_words():
     cur_dictionary_json = cursor.fetchall()
     data = cur_dictionary_json[0][0]
 
-    # Преобразование строки JSON в список
-    json_data = json.loads(data)
-
     cursor.close()
     connection.close()
-    return json_data
+
+    # перенёс create_answer_options
+    dictionary = json.loads(data)
+
+    return dictionary
 
 
 # Добавляет слово в database
@@ -113,7 +123,7 @@ def update_mailing(current_user_id, new_value):
     cursor.close()
     connection.close()
 
-
+# Добавил проверку прямо в store()
 # Проверяет, существует ли user с указанным id
 def check_user_exists(user_id):
     connection = connect_database()

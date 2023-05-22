@@ -1,7 +1,8 @@
 import json
 import mysql.connector
 import random
-import time #was used to calculate the time 
+import time  # was used to calculate the time
+import datetime
 
 
 # удаление словаря
@@ -21,7 +22,7 @@ def store(user_id: int, access: str, mailing: bool):
     connection = connect_database()
     cursor = connection.cursor()
 
-    #new_block
+    # new_block
     query_check = "SELECT user_id FROM User_Dictionaries"
     cursor.execute(query_check)
     data = [i[0] for i in cursor.fetchall()]
@@ -31,7 +32,7 @@ def store(user_id: int, access: str, mailing: bool):
         cursor.close()
         connection.close()
         return "Вы уже зарегестрированы"
-    else:    
+    else:
         json_data = json.dumps([])
 
         print(user_id, access, json_data, mailing)
@@ -44,7 +45,6 @@ def store(user_id: int, access: str, mailing: bool):
         cursor.close()
         connection.close()
         return "Добро пожаловать!"
-
 
 
 # Получает все слова
@@ -69,23 +69,39 @@ def get_words():
     return dictionary
 
 
-# Добавляет спииоск слов в database
+# Добавляет список слов в database
 def add_word_to_bd(arr: list, user_id):
+    start_time = datetime.datetime.now()
+
     connection = connect_database()
     cursor = connection.cursor()
 
     new_dict = [{"word": item[0], "degree": 0, "translation": item[1]} for item in arr]
 
-    query = "UPDATE User_Dictionaries SET dictionary = JSON_ARRAY_APPEND(dictionary, '$', CAST(%s AS JSON)) WHERE user_id = %s"
-    cursor.execute(query, (json.dumps(new_dict), user_id))
+    query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
+    cursor.execute(query, (user_id,))
+    existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
+
+    if existing_dict:
+        merged_dict = json.loads(existing_dict)
+        merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
+    else:
+        merged_dict = new_dict
+
+    query = "UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
+    cursor.execute(query, (json.dumps(merged_dict), user_id))
 
     connection.commit()
 
-    # Выведите сообщение об успешном добавлении
-    print("Элемент успешно добавлен в ячейку базы данных.")
+    # Вывод сообщения об успешном добавлении
+    print("Элементы успешно добавлены в ячейку базы данных.")
 
     cursor.close()
     connection.close()
+
+    end_time = datetime.datetime.now()
+    execution_time = end_time - start_time
+    print("время выполнения ", execution_time.seconds)
 
 
 # Возвращает значение Mailing
@@ -118,6 +134,7 @@ def update_mailing(current_user_id, new_value):
     cursor.close()
     connection.close()
 
+
 # Добавил проверку прямо в store()
 # Проверяет, существует ли user с указанным id
 def check_user_exists(user_id):
@@ -137,5 +154,3 @@ def check_user_exists(user_id):
         return False
     else:
         return True
-
-

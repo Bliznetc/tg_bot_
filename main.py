@@ -100,18 +100,6 @@ def send_quiz(message):
 
     bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz', question=quiz_text)
 
-#Мы больше это не используем
-
-# # checks quiz
-# @bot.callback_query_handler(func=lambda call: True)
-# def check_quiz(call):
-#     is_correct = call.data == "True"
-#     if is_correct:
-#         message_text = "Correct answer!"
-#     else:
-#         message_text = "Sorry, that was incorrect."
-#     bot.answer_callback_query(callback_query_id=call.id, text=message_text)
-
 
 
 #sets the interval for sending quizes

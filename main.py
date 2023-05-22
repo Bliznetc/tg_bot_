@@ -8,7 +8,7 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
 import random
 from telebot import types
-import json_functions as jsonFunc
+import processing as pr
 import db_interface
 
 # Initialize the bot using the bot token
@@ -44,7 +44,8 @@ def add_word(message):
     bot.register_next_step_handler(message, add_and_verify)
 
 def add_and_verify(message):
-    jsonFunc.add_word_to_dt(message.text)
+    listOfNewWords = pr.prepare_text(message.text)
+    db_interface.add_word_to_bd(listOfNewWords, message.chat.id)
     bot.send_message(message.chat.id, "Словарь обновлен!")
 
 #Add words from files to the dict
@@ -65,10 +66,11 @@ def add_word_from_file (message):
     # Чтение содержимого файла
     with open(file_name, 'r', encoding='utf-8') as file:
         file_content = file.read()
-
+    
     os.remove(file_name)
     
-    jsonFunc.add_word_to_dt(file_content)
+    listOfNewWords = pr.prepare_text(file_content)
+    db_interface.add_word_to_bd(listOfNewWords, message.chat.id)
 
     bot.reply_to(message, "Словарь обновлен")
 

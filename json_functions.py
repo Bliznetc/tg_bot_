@@ -4,14 +4,11 @@ import random
 import db_interface
 
 
-def create_answer_options():
-    dictionary = db_interface.get_words()
-    dictionary.sort(key=lambda x: x['degree'])
-    #using lambda
-    return random.sample(dictionary, 4)
-
-
-print(create_answer_options())
+# def create_answer_options():
+#     dictionary = db_interface.get_words()
+#     dictionary.sort(key=lambda x: x['degree'])
+#     #using lambda
+#     return random.sample(dictionary, 4)
 
 
 def add_word_to_dt(cur_text, user_id=745553839):
@@ -24,20 +21,7 @@ def add_word_to_dt(cur_text, user_id=745553839):
 
         new_key = new_key.replace('\n', '')
         new_key = new_key.lower()
-
-        f = 1
-        #for word in dictionary:
-        #    if word['word'] == new_key:
-        #        f = 0
-        #        break
-
-        #print(new_key, new_meaning, f)
-
-        if f == 1:
-            # print("Добавил слово")
-            db_interface.add_word_to_bd(new_key, new_meaning, user_id)
-            # dictionary.append({'word': new_key, 'translation': new_meaning, 'degree': 0})
-
-    #with open("dictionary.json", "w") as file:
-    #    json.dump(dictionary, file, indent=4)
+        
+        db_interface.add_word_to_bd(new_key, new_meaning, user_id)
+            
 

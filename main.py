@@ -35,6 +35,7 @@ def help_handler(message):
 # Define a function to handle the /whole_dict command
 @bot.message_handler(commands=['whole_dict'])
 def whole_dict_handler(message):
+    bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     dictionary = db_interface.get_words()
     file_path = "./cache/output.txt"
 

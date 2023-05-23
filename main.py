@@ -46,6 +46,7 @@ def add_word(message):
 
 
 def add_and_verify(message):
+    bot.send_message(message.chat.id, "Добавляю...")
     listOfNewWords = pr.prepare_text(message.text)
     db_interface.add_word_to_bd(listOfNewWords, message.chat.id)
     bot.send_message(message.chat.id, "Словарь обновлен!")
@@ -71,6 +72,8 @@ def add_word_from_file(message):
         file_content = file.read()
 
     os.remove(file_name)
+
+    bot.send_message(message.chat.id, "Добавляю...")
 
     listOfNewWords = pr.prepare_text(file_content)
     db_interface.add_word_to_bd(listOfNewWords, message.chat.id)

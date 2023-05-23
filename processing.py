@@ -1,6 +1,6 @@
 #Обработка текста со словами необходимо немного
 #усовершентсвовать эту функцию (неправильный ввод пользователей)
-def prepare_text(text):
+def prepare_text(text: str) -> list:
     arr = text.split(';')
     result = []
     for x in arr:

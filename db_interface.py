@@ -63,7 +63,6 @@ def get_words():
     cursor.close()
     connection.close()
 
-    # перенёс create_answer_options
     dictionary = json.loads(data)
 
     return dictionary

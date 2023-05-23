@@ -70,7 +70,7 @@ def get_words():
 
 
 # Добавляет список слов в database
-def add_word_to_bd(arr: list, user_id):
+def add_word_to_bd(arr: list, user_id: int):
     start_time = datetime.datetime.now()
 
     connection = connect_database()

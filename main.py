@@ -106,13 +106,15 @@ def generate_quiz():
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(message):
+    bot.send_message(message.chat.id, "Подбираю слова...")
+
     word_number, answer_options = generate_quiz()
     for answer in answer_options:
         answer['word'] = answer['word'].capitalize()
         answer['translation'] = answer['translation'].capitalize()
 
     # Отправка опроса в чат
-    quiz_text = f"Какой перевод у слова: {answer_options[word_number]['word']}?\n"
+    quiz_text = f"Какой Переводится слово: {answer_options[word_number]['word']}?\n"
     possible_answers = [answer['translation'] for answer in answer_options]
 
     bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz',
@@ -135,7 +137,7 @@ def set_interval(message, func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    bot.send_message(message.chat.id, "введите, как часто Вы хотите, чтобы приходили квизы(в минутых)")
+    bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутых)")
 
     bot.register_next_step_handler(message, start_mailing_time)
 
@@ -147,10 +149,10 @@ def start_mailing_time(message):
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
         set_interval(message, send_quiz, minutes * 60)
-        bot.send_message(message.chat.id, "запустил рассылку")
+        bot.send_message(message.chat.id, "Запустил рассылку")
         db_interface.update_mailing(message.chat.id, 1)
     else:
-        bot.send_message(message.chat.id, "У вас уже запущена рассылка")
+        bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
 
 
 @bot.message_handler(commands=['stop_mailing'])
@@ -158,10 +160,10 @@ def stop_mailing(message):
     f = db_interface.started_mailing(message.chat.id)
     if f == 1:
         t.cancel()
-        bot.send_message(message.chat.id, "остановил рассылку")
+        bot.send_message(message.chat.id, "Остановил рассылку")
         db_interface.update_mailing(message.chat.id, 0)
     else:
-        bot.send_message(message.chat.id, "у Вас не запущена рассылка")
+        bot.send_message(message.chat.id, "У Вас не запущена рассылка")
 
 
 print(__name__)

@@ -121,8 +121,9 @@ def update_mailing(current_user_id, new_value):
     connection = connect_database()
     cursor = connection.cursor()
 
+
     # Выполнение SQL-запроса
-    query = f"UPDATE User_Dictionaries SET Mailing = {int(new_value)} WHERE user_id = {current_user_id}"
+    query = f"UPDATE User_Dictionaries SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
     cursor.execute(query)
 
     connection.commit()

@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 import threading
@@ -138,7 +139,6 @@ def set_interval(message, func, sec):
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
     bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутых)")
-
     bot.register_next_step_handler(message, start_mailing_time)
 
 
@@ -148,9 +148,9 @@ def start_mailing_time(message):
     # запуск рассылки, время переводится в секунды
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
-        set_interval(message, send_quiz, minutes * 60)
+        # set_interval(message, send_quiz, minutes * 60)
         bot.send_message(message.chat.id, "Запустил рассылку")
-        db_interface.update_mailing(message.chat.id, 1)
+        db_interface.update_mailing(message.chat.id, minutes)
     else:
         bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
 
@@ -159,7 +159,7 @@ def start_mailing_time(message):
 def stop_mailing(message):
     f = db_interface.started_mailing(message.chat.id)
     if f == 1:
-        t.cancel()
+        # t.cancel()
         bot.send_message(message.chat.id, "Остановил рассылку")
         db_interface.update_mailing(message.chat.id, 0)
     else:

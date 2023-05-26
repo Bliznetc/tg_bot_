@@ -1,4 +1,3 @@
-from datetime import datetime
 import json
 import os
 import threading
@@ -53,10 +52,11 @@ def whole_dict_handler(message):
 # adds word to the dictionary.json file
 @bot.message_handler(commands=['add_word'])
 def add_word(message):
-    bot.reply_to(message, 'Введите новое слово и перевод в формате "слово-перевод"')
+    bot.reply_to(message, 'Введите новое слово и перевод в формате "слово1-перевод1;слово2-перевод2;и тд"')
     bot.register_next_step_handler(message, add_and_verify)
 
 
+# Добавляет слова непосредственно в словарь
 def add_and_verify(message):
     bot.send_message(message.chat.id, "Добавляю...")
     listOfNewWords = pr.prepare_text(message.text)
@@ -106,8 +106,8 @@ def generate_quiz():
 
 # sends quiz
 @bot.message_handler(commands=['quiz'])
-def send_quiz(message):
-    bot.send_message(message.chat.id, "Подбираю слова...")
+def send_quiz(chat_id):
+    bot.send_message(chat_id, "Подбираю слова...")
 
     word_number, answer_options = generate_quiz()
     for answer in answer_options:
@@ -118,17 +118,24 @@ def send_quiz(message):
     quiz_text = f"Какой Переводится слово: {answer_options[word_number]['word']}?\n"
     possible_answers = [answer['translation'] for answer in answer_options]
 
-    bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz',
+    bot.send_poll(chat_id, options=possible_answers, correct_option_id=word_number, type='quiz',
                   question=quiz_text)
 
 
-# sets the interval for sending quizes
-def set_interval(message, func, sec):
+# function to send quizzes to the users
+def check_send_quiz():
+    print(0)
+    need_list = db_interface.get_needed_users()
+    for user_id in need_list:
+        send_quiz(user_id)
+
+
+def set_interval(func, sec):
     print("Я вызвал set_interval")
 
     def func_wrapper():
-        set_interval(message, func, sec)
-        func(message)
+        set_interval(func, sec)
+        func()
 
     global t
     t = threading.Timer(sec, func_wrapper)
@@ -138,7 +145,7 @@ def set_interval(message, func, sec):
 
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутых)")
+    bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")
     bot.register_next_step_handler(message, start_mailing_time)
 
 
@@ -148,7 +155,6 @@ def start_mailing_time(message):
     # запуск рассылки, время переводится в секунды
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
-        # set_interval(message, send_quiz, minutes * 60)
         bot.send_message(message.chat.id, "Запустил рассылку")
         db_interface.update_mailing(message.chat.id, minutes)
     else:
@@ -170,4 +176,4 @@ print(__name__)
 
 if __name__ == '__main__':
     bot.polling()
-
+    set_interval(check_send_quiz, 60)

@@ -119,7 +119,7 @@ def send_quiz(MesOrNum):
         answer['translation'] = answer['translation'].capitalize()
 
     # Отправка опроса в чат
-    quiz_text = f"Какой Переводится слово: {answer_options[word_number]['word']}?\n"
+    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']}?\n"
     possible_answers = [answer['translation'] for answer in answer_options]
 
     bot.send_poll(chat_id, options=possible_answers, correct_option_id=word_number, type='quiz',
@@ -162,6 +162,7 @@ def start_mailing_time(message):
     if f == 0:
         bot.send_message(message.chat.id, "Запустил рассылку")
         db_interface.update_mailing(message.chat.id, minutes)
+        set_interval(check_send_quiz, 60)
     else:
         bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
 
@@ -181,5 +182,4 @@ print(__name__)
 
 if __name__ == '__main__':
     bot.polling()
-    # это так не работает, сука на Гарике :) | пока что оставлю здесь, чтобы потом можно было это вынести куда-нибудь
-    # set_interval(check_send_quiz, 60)
+    

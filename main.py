@@ -106,23 +106,11 @@ def generate_quiz():
 
 # sends quiz
 @bot.message_handler(commands=['quiz'])
-def send_quiz(message):
-    bot.send_message(message.chat.id, "Подбираю слова...")
-
-    word_number, answer_options = generate_quiz()
-    for answer in answer_options:
-        answer['word'] = answer['word'].capitalize()
-        answer['translation'] = answer['translation'].capitalize()
-
-    # Отправка опроса в чат
-    quiz_text = f"Какой Переводится слово: {answer_options[word_number]['word']}?\n"
-    possible_answers = [answer['translation'] for answer in answer_options]
-
-    bot.send_poll(message.chat.id, options=possible_answers, correct_option_id=word_number, type='quiz',
-                  question=quiz_text)
-
-
-def send_quiz2(chat_id):
+def send_quiz(MesOrNum):
+    if isinstance(MesOrNum, int):
+        chat_id = MesOrNum
+    else:
+        chat_id = MesOrNum.chat.id
     bot.send_message(chat_id, "Подбираю слова...")
 
     word_number, answer_options = generate_quiz()
@@ -143,7 +131,8 @@ def check_send_quiz():
     print(0)
     need_list = db_interface.get_needed_users()
     for user_id in need_list:
-        send_quiz2(user_id)
+        # send_quiz2(user_id)
+        send_quiz(user_id)
 
 
 def set_interval(func, sec):
@@ -192,4 +181,5 @@ print(__name__)
 
 if __name__ == '__main__':
     bot.polling()
-    set_interval(check_send_quiz, 60)
+    # это так не работает, сука на Гарике :) | пока что оставлю здесь, чтобы потом можно было это вынести куда-нибудь
+    # set_interval(check_send_quiz, 60)

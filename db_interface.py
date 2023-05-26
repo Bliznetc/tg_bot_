@@ -188,5 +188,6 @@ def get_needed_users():
 
     connection = connect_database()
     cursor = connection.cursor()
+    print(cur_list)
     return cur_list
 

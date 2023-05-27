@@ -31,7 +31,7 @@ def store(user_id: int, access: str, mailing: bool):
     if user_id in data:
         cursor.close()
         connection.close()
-        print(time.time()-t, "регестрация пользователя")
+        print(time.time()-t, "регистрация пользователя")
         return "Вы уже зарегестрированы"
     else:
         json_data = json.dumps([])

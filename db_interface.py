@@ -4,6 +4,7 @@ import datetime
 from datetime import datetime
 import time
 
+
 def connect_database():
     connection = mysql.connector.connect(
         host="containers-us-west-112.railway.app",

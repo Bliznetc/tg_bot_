@@ -131,10 +131,8 @@ def send_quiz(MesOrNum):
 
 # function to send quizzes to the users
 def check_send_quiz():
-    print(0)
     need_list = db_interface.get_needed_users()
     for user_id in need_list:
-        # send_quiz2(user_id)
         send_quiz(user_id)
 
 
@@ -159,13 +157,11 @@ def start_mailing(message):
 
 def start_mailing_time(message):
     minutes = int(message.text)
-
     # запуск рассылки, время переводится в секунды
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
         bot.send_message(message.chat.id, "Запустил рассылку")
         db_interface.update_mailing(message.chat.id, minutes)
-        set_interval(check_send_quiz, 60)
     else:
         bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
 
@@ -182,6 +178,7 @@ def stop_mailing(message):
 
 
 print(__name__)
+set_interval(check_send_quiz, 60)
 
 if __name__ == '__main__':
     bot.polling()

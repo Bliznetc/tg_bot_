@@ -1,4 +1,4 @@
-import json
+import asyncio
 import os
 import threading
 import time
@@ -10,6 +10,7 @@ import random
 from telebot import types
 import processing as pr
 import db_interface
+import db_interface_test
 
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
@@ -21,6 +22,7 @@ def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
     reply_text = db_interface.store(message.chat.id, "user", 0)
+    # reply_text = db_interface_test.store(message.chat.id, "user", 0)
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
@@ -36,6 +38,7 @@ def help_handler(message):
 @bot.message_handler(commands=['whole_dict'])
 def whole_dict_handler(message):
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
+    # dictionary = asyncio.run(db_interface_test.get_words())
     dictionary = db_interface.get_words()
     file_path = "./cache/output.txt"
 

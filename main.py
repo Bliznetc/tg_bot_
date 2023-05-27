@@ -1,4 +1,3 @@
-import asyncio
 import os
 import threading
 import time
@@ -7,7 +6,6 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
 import random
-from telebot import types
 import processing as pr
 import db_interface_test
 
@@ -20,7 +18,6 @@ bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    # reply_text = db_interface.store(message.chat.id, "user", 0)
     reply_text = db_interface_test.store(message.chat.id, "user", 0)
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
@@ -39,7 +36,6 @@ def whole_dict_handler(message):
     t = time.time()
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     dictionary = db_interface_test.get_words()
-    # dictionary = db_interface.get_words()
     file_path = "./cache/output.txt"
 
     with open(file_path, "w", encoding="utf-8") as file:
@@ -110,7 +106,6 @@ def generate_quiz():
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(MesOrNum):
-    
     if isinstance(MesOrNum, int):
         chat_id = MesOrNum
     else:
@@ -134,10 +129,9 @@ def send_quiz(MesOrNum):
 
 # function to send quizzes to the users
 def check_send_quiz():
-    print(0)
+    # print(0)
     need_list = db_interface_test.get_needed_users()
     for user_id in need_list:
-        # send_quiz2(user_id)
         send_quiz(user_id)
 
 
@@ -162,7 +156,6 @@ def start_mailing(message):
 
 def start_mailing_time(message):
     minutes = int(message.text)
-
     # запуск рассылки, время переводится в секунды
     f = db_interface_test.started_mailing(message.chat.id)
     if f == 0:
@@ -188,4 +181,3 @@ print(__name__)
 
 if __name__ == '__main__':
     bot.polling()
-    

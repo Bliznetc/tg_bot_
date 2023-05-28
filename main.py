@@ -166,6 +166,11 @@ def stop_mailing(message):
         bot.send_message(message.chat.id, "У Вас не запущена рассылка")
 
 
+@bot.message_handler(commands=['game'])
+def gaming_quiz(message):
+    bot.send_message(message.chat.id, "Введите кол-ва квизов, которое вы хотите пройти")
+    print(0)
+    
 print(__name__)
 
 if __name__ == '__main__':

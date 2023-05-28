@@ -1,11 +1,10 @@
 import json
 import mysql.connector
-import random
-import time  # was used to calculate the time
 import datetime
+from datetime import datetime
+import time
 
 
-# удаление словаря
 def connect_database():
     connection = mysql.connector.connect(
         host="containers-us-west-112.railway.app",
@@ -19,6 +18,7 @@ def connect_database():
 
 # Добавляет пользователя в database
 def store(user_id: int, access: str, mailing: bool):
+    t = time.time()
     connection = connect_database()
     cursor = connection.cursor()
 
@@ -31,6 +31,7 @@ def store(user_id: int, access: str, mailing: bool):
     if user_id in data:
         cursor.close()
         connection.close()
+        print(time.time()-t, "регистрация пользователя")
         return "Вы уже зарегестрированы"
     else:
         json_data = json.dumps([])
@@ -44,27 +45,32 @@ def store(user_id: int, access: str, mailing: bool):
         connection.commit()
         cursor.close()
         connection.close()
+        print(time.time()-t, "регестрация пользователя")
         return "Добро пожаловать!"
 
 
 # Получает все слова
 def get_words():
+    t = time.time()
     connection = connect_database()
+    print(time.time()-t, "old connect")
     cursor = connection.cursor()
-
+    print(time.time()-t, "old cursor")
     # Выполнение SQL-запроса
     query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = 955008318"
     cursor.execute(query)
-
+    print(time.time()-t, "old query")
     # Получение результатов
     cur_dictionary_json = cursor.fetchall()
     data = cur_dictionary_json[0][0]
+    dictionary = json.loads(data)
+    print(time.time()-t, "old data")
 
     cursor.close()
+    print(time.time()-t, "old cursor")
     connection.close()
 
-    dictionary = json.loads(data)
-
+    print(time.time()-t, "old")
     return dictionary
 
 
@@ -121,7 +127,6 @@ def update_mailing(current_user_id, new_value):
     connection = connect_database()
     cursor = connection.cursor()
 
-
     # Выполнение SQL-запроса
     query = f"UPDATE User_Dictionaries SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
     cursor.execute(query)
@@ -154,3 +159,40 @@ def check_user_exists(user_id):
         return False
     else:
         return True
+
+
+# Возвращает список всех юзеров, которым нужно отправить квиз в текущий момент
+def get_needed_users():
+    connection = connect_database()
+    cursor = connection.cursor()
+
+    query = f"SELECT user_id, sent_time, Mailing FROM User_Dictionaries WHERE Mailing != 0"
+    cursor.execute(query)
+
+    result = cursor.fetchall()
+    print(result)
+
+    cur_list = []
+    for a in result:
+        cur_time = a[1]
+        period = a[2]
+        sent_h = cur_time.seconds // 3600
+        sent_m = (cur_time.seconds // 60) % 60
+
+        now = datetime.now()
+        now_h = now.hour
+        now_m = now.minute
+
+        sent_allm = sent_h * 60 + sent_m
+        now_allm = now_h * 60 + now_m
+        if now_allm < sent_allm:
+            now_allm += 1440
+
+        print(now_allm, sent_allm, (now_allm - sent_allm), period)
+        if (now_allm - sent_allm) % period == 0:
+            cur_list.append(a[0])
+        # print(sent_h, sent_m, cur_time, now_h, now_m)
+    #убрал
+    print(cur_list)
+    return cur_list
+

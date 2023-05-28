@@ -172,7 +172,7 @@ def start_mailing_time(message):
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
     f = db_interface_test.started_mailing(message.chat.id)
-    if f == 1:
+    if f != 0:
         # t.cancel()
         bot.send_message(message.chat.id, "Остановил рассылку")
         db_interface_test.update_mailing(message.chat.id, 0)

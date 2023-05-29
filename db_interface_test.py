@@ -2,8 +2,8 @@ import json
 import mysql.connector
 import datetime
 from datetime import datetime
-
 import time
+import processing
 
 t = time.time()
 try:
@@ -45,7 +45,7 @@ def store(user_id: int, access: str, mailing: bool):
             text = "Добро пожаловать!"
 
         cursor.close()
-        print(time.time() - t)
+        # print(time.time() - t)
         return text
 
 
@@ -65,7 +65,7 @@ def get_words():
 
         cursor.close()
 
-        print(time.time() - t)
+        # print(time.time() - t)
         return dictionary
 
 
@@ -75,28 +75,46 @@ def add_word_to_bd(arr: list, user_id: int):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        new_dict = [{"word": item[0], "degree": 0, "translation": item[1]} for item in arr]
+        for item in arr:
+            new_dict = [{"word": item[0], "degree": 0, "translation": item[1]}]
+            type = processing.get_word_type(item[0])
+            print (new_dict)
 
-        query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
+            # добавление слов к словрю юзера
+            query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
+            cursor.execute(query, (user_id,))
+            existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
 
-        if existing_dict:
-            merged_dict = json.loads(existing_dict)
-            merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
-        else:
-            merged_dict = new_dict
+            if existing_dict:
+                merged_dict = json.loads(existing_dict)
+                merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
+            else:
+                merged_dict = new_dict
 
-        query = "UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
-        cursor.execute(query, (json.dumps(merged_dict), user_id))
+            query = f"UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
+            cursor.execute(query, (json.dumps(merged_dict), user_id))
+            connection.commit()
 
-        connection.commit()
+            # добавление слов в словарь по частям речи
+            query = f"SELECT dictionary FROM PartsOfSpeech WHERE id = %s"
+            cursor.execute(query, (type,))
+            existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
+
+            if existing_dict:
+                merged_dict = json.loads(existing_dict)
+                merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
+            else:
+                merged_dict = new_dict
+
+            query = f"UPDATE PartsOfSpeech SET dictionary = %s WHERE id = %s"
+            cursor.execute(query, (json.dumps(merged_dict), type))
+            connection.commit()
 
         # Вывод сообщения об успешном добавлении
         print("Элементы успешно добавлены в ячейку базы данных.")
 
         cursor.close()
-        print(time.time() - t)
+        # print(time.time() - t)
 
 
 # Возвращает значение Mailing
@@ -177,7 +195,6 @@ def get_needed_users():
             if now_allm < sent_allm:
                 now_allm += 1440
 
-            # print(now_allm, sent_allm, (now_allm - sent_allm), period)
             if (now_allm - sent_allm) % period == 0:
                 cur_list.append(a[0])
 

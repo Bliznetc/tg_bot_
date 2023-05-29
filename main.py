@@ -96,7 +96,6 @@ def add_word_from_file(message):
 # generates quiz when user types "/quiz"
 def generate_quiz():
     dictionary = db_interface_test.get_words()
-   
     answer_options = random.sample(dictionary, 4)
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging
@@ -138,6 +137,7 @@ def check_send_quiz():
     send_quiz(0, need_list)
 
 
+# checks if there are users asking for quiz
 def set_interval(func, sec):
     print("Я вызвал set_interval")
 
@@ -151,6 +151,7 @@ def set_interval(func, sec):
     return t
 
 
+# updates user's mailing status
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
     bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")
@@ -172,7 +173,7 @@ def start_mailing_time(message):
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
     f = db_interface_test.started_mailing(message.chat.id)
-    if f == 1:
+    if f != 0:
         # t.cancel()
         bot.send_message(message.chat.id, "Остановил рассылку")
         db_interface_test.update_mailing(message.chat.id, 0)

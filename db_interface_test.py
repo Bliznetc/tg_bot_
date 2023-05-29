@@ -95,6 +95,17 @@ def add_word_to_bd(arr: list, user_id: int):
             cursor.execute(query, (json.dumps(merged_dict), user_id))
             connection.commit()
 
+
+            # Проверка, что добавляет admin
+            query = f"SELECT access FROM User_Dictionaries WHERE user_id = {user_id}"
+            cursor.execute(query)
+
+            # Получение результатов
+            cur_json = cursor.fetchall()
+            l = cur_json[0][0]
+            if (l != "admin"):
+                continue
+
             # добавление слов в словарь по частям речи
             query = f"SELECT dictionary FROM PartsOfSpeech WHERE id = %s"
             cursor.execute(query, (type,))

@@ -22,6 +22,16 @@ except mysql.connector.Error as e:
 print(time.time() - t, "takes to set up the connection")
 
 
+# It should be const all the time. It is to know the number in the list of words for each part
+part_to_num = {
+    "adj" : 0,
+    "adv" : 1,
+    "noun" : 2,
+    "other" : 3,
+    "verb" : 4
+}
+
+
 # Добавляет пользователя в database
 def store(user_id: int, access: str, mailing: bool):
     t = time.time()
@@ -49,13 +59,39 @@ def store(user_id: int, access: str, mailing: bool):
         return text
 
 
-# Получает все слова
+# Получает все слова, которые есть в бд
 def get_words():
     t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
         # Выполнение SQL-запроса
-        query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = 955008318"
+        query = "SELECT dictionary FROM PartsOfSpeech"
+        cursor.execute(query)
+
+        # Получение результатов
+        cur_dictionary_json = cursor.fetchall()
+
+        dict_parts = [] # Словарь, разбитый по частям речи
+        all_dict = [] # Полный словарь
+        for i in cur_dictionary_json:
+            dictionary = json.loads(i[0])
+            dict_parts.append(dictionary)  # Объединение существующего списка с новым списком
+            for word in dictionary:
+                all_dict.append(word)
+
+        cursor.close()
+
+        # print(time.time() - t)
+        return dict_parts, all_dict
+
+
+# Получает все слова, которые есть в словаре юзера
+def get_words_by_user_id(id):
+    t = time.time()
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+        # Выполнение SQL-запроса
+        query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = {id}"
         cursor.execute(query)
 
         # Получение результатов
@@ -64,9 +100,17 @@ def get_words():
         dictionary = json.loads(data)
 
         cursor.close()
-
-        # print(time.time() - t)
         return dictionary
+
+
+# Проверка на уникальность
+def check_in (new_key, dictionary):
+    f = 1
+    for word in dictionary:
+        if word['word'] == new_key:
+            f = 0
+            break
+    return f
 
 
 # Добавляет список слов в database
@@ -80,7 +124,13 @@ def add_word_to_bd(arr: list, user_id: int):
             type = processing.get_word_type(item[0])
             print (new_dict)
 
-            # добавление слов к словрю юзера
+            # Проверка на уникальность
+            cur_dictionary = get_words_by_user_id(user_id)
+            f = check_in(item[0], cur_dictionary)
+            if f == 0:
+                continue;
+
+            # добавление слов к словарю юзера
             query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
             cursor.execute(query, (user_id,))
             existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
@@ -96,17 +146,22 @@ def add_word_to_bd(arr: list, user_id: int):
             connection.commit()
 
 
-            # Проверка, что добавляет admin
+            # Проверка, что добавляет admin и слово уникальное
             query = f"SELECT access FROM User_Dictionaries WHERE user_id = {user_id}"
             cursor.execute(query)
 
             # Получение результатов
-            cur_json = cursor.fetchall()
-            l = cur_json[0][0]
-            if (l != "admin"):
+            l = cursor.fetchall()[0][0]
+            if l != "admin":
                 continue
 
-            # добавление слов в словарь по частям речи
+            to_dict_num = part_to_num[type]
+            cur_dictionary = get_words()[0][to_dict_num]
+            f = check_in(item[0], cur_dictionary)
+            if f == 0:
+                continue;
+
+            # Вторая часть добавления: Добавление слов в словарь по частям речи
             query = f"SELECT dictionary FROM PartsOfSpeech WHERE id = %s"
             cursor.execute(query, (type,))
             existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей

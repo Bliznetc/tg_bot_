@@ -35,7 +35,7 @@ def help_handler(message):
 def whole_dict_handler(message):
     t = time.time()
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
-    dictionary = db_interface_test.get_words()
+    dictionary = db_interface_test.get_words()[1]
     file_path = "./cache/output.txt"
 
     with open(file_path, "w", encoding="utf-8") as file:
@@ -52,7 +52,8 @@ def whole_dict_handler(message):
 # adds word to the dictionary.json file
 @bot.message_handler(commands=['add_word'])
 def add_word(message):
-    bot.reply_to(message, 'Введите новое слово и перевод в формате "слово1-перевод1;слово2-перевод2;и тд"')
+    bot.reply_to(message, 'Введите новое слово и перевод в формате "слово1-перевод1;слово2-перевод2;и тд;'
+                          '\nтакже, пожалуйста, вводите слова в единственном числе и мужском роде"')
     bot.register_next_step_handler(message, add_and_verify)
 
 
@@ -95,8 +96,7 @@ def add_word_from_file(message):
 
 # generates quiz when user types "/quiz"
 def generate_quiz():
-    dictionary = db_interface_test.get_words()
-   
+    dictionary = db_interface_test.get_words()[0][random.randint(0, 4)]
     answer_options = random.sample(dictionary, 4)
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging
@@ -138,6 +138,7 @@ def check_send_quiz():
     send_quiz(0, need_list)
 
 
+# checks if there are users asking for quiz
 def set_interval(func, sec):
     print("Я вызвал set_interval")
 
@@ -151,6 +152,7 @@ def set_interval(func, sec):
     return t
 
 
+# updates user's mailing status
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
     bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")

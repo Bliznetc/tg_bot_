@@ -2,8 +2,8 @@ import json
 import mysql.connector
 import datetime
 from datetime import datetime
-
 import time
+import processing
 
 t = time.time()
 try:
@@ -20,6 +20,16 @@ try:
 except mysql.connector.Error as e:
     print("Error while creating connection pool:", e)
 print(time.time() - t, "takes to set up the connection")
+
+
+# It should be const all the time. It is to know the number in the list of words for each part
+part_to_num = {
+    "adj" : 0,
+    "adv" : 1,
+    "noun" : 2,
+    "other" : 3,
+    "verb" : 4
+}
 
 
 # Добавляет пользователя в database
@@ -45,17 +55,43 @@ def store(user_id: int, access: str, mailing: bool):
             text = "Добро пожаловать!"
 
         cursor.close()
-        print(time.time() - t)
+        # print(time.time() - t)
         return text
 
 
-# Получает все слова
+# Получает все слова, которые есть в бд
 def get_words():
     t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
         # Выполнение SQL-запроса
-        query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = 955008318"
+        query = "SELECT dictionary FROM PartsOfSpeech"
+        cursor.execute(query)
+
+        # Получение результатов
+        cur_dictionary_json = cursor.fetchall()
+
+        dict_parts = [] # Словарь, разбитый по частям речи
+        all_dict = [] # Полный словарь
+        for i in cur_dictionary_json:
+            dictionary = json.loads(i[0])
+            dict_parts.append(dictionary)  # Объединение существующего списка с новым списком
+            for word in dictionary:
+                all_dict.append(word)
+
+        cursor.close()
+
+        # print(time.time() - t)
+        return dict_parts, all_dict
+
+
+# Получает все слова, которые есть в словаре юзера
+def get_words_by_user_id(id):
+    t = time.time()
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+        # Выполнение SQL-запроса
+        query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = {id}"
         cursor.execute(query)
 
         # Получение результатов
@@ -64,9 +100,17 @@ def get_words():
         dictionary = json.loads(data)
 
         cursor.close()
-
-        print(time.time() - t)
         return dictionary
+
+
+# Проверка на уникальность
+def check_in (new_key, dictionary):
+    f = 1
+    for word in dictionary:
+        if word['word'] == new_key:
+            f = 0
+            break
+    return f
 
 
 # Добавляет список слов в database
@@ -75,28 +119,68 @@ def add_word_to_bd(arr: list, user_id: int):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        new_dict = [{"word": item[0], "degree": 0, "translation": item[1]} for item in arr]
+        for item in arr:
+            new_dict = [{"word": item[0], "degree": 0, "translation": item[1]}]
+            type = processing.get_word_type(item[0])
+            print (new_dict)
 
-        query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
+            # Проверка на уникальность
+            cur_dictionary = get_words_by_user_id(user_id)
+            f = check_in(item[0], cur_dictionary)
+            if f == 0:
+                continue;
 
-        if existing_dict:
-            merged_dict = json.loads(existing_dict)
-            merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
-        else:
-            merged_dict = new_dict
+            # добавление слов к словарю юзера
+            query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
+            cursor.execute(query, (user_id,))
+            existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
 
-        query = "UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
-        cursor.execute(query, (json.dumps(merged_dict), user_id))
+            if existing_dict:
+                merged_dict = json.loads(existing_dict)
+                merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
+            else:
+                merged_dict = new_dict
 
-        connection.commit()
+            query = f"UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
+            cursor.execute(query, (json.dumps(merged_dict), user_id))
+            connection.commit()
+
+
+            # Проверка, что добавляет admin и слово уникальное
+            query = f"SELECT access FROM User_Dictionaries WHERE user_id = {user_id}"
+            cursor.execute(query)
+
+            # Получение результатов
+            l = cursor.fetchall()[0][0]
+            if l != "admin":
+                continue
+
+            to_dict_num = part_to_num[type]
+            cur_dictionary = get_words()[0][to_dict_num]
+            f = check_in(item[0], cur_dictionary)
+            if f == 0:
+                continue;
+
+            # Вторая часть добавления: Добавление слов в словарь по частям речи
+            query = f"SELECT dictionary FROM PartsOfSpeech WHERE id = %s"
+            cursor.execute(query, (type,))
+            existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
+
+            if existing_dict:
+                merged_dict = json.loads(existing_dict)
+                merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
+            else:
+                merged_dict = new_dict
+
+            query = f"UPDATE PartsOfSpeech SET dictionary = %s WHERE id = %s"
+            cursor.execute(query, (json.dumps(merged_dict), type))
+            connection.commit()
 
         # Вывод сообщения об успешном добавлении
         print("Элементы успешно добавлены в ячейку базы данных.")
 
         cursor.close()
-        print(time.time() - t)
+        # print(time.time() - t)
 
 
 # Возвращает значение Mailing
@@ -177,7 +261,6 @@ def get_needed_users():
             if now_allm < sent_allm:
                 now_allm += 1440
 
-            # print(now_allm, sent_allm, (now_allm - sent_allm), period)
             if (now_allm - sent_allm) % period == 0:
                 cur_list.append(a[0])
 

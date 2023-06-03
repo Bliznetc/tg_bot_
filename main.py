@@ -96,7 +96,7 @@ def add_word_from_file(message):
 
 # generates quiz when user types "/quiz"
 def generate_quiz():
-    dictionary = db_interface_test.get_words()[1]
+    dictionary = db_interface_test.get_words()[0][random.randint(0, 4)]
     answer_options = random.sample(dictionary, 4)
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging

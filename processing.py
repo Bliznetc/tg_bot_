@@ -2,7 +2,7 @@
 # усовершенствовать эту функцию (неправильный ввод пользователей)
 import spacy
 
-nlp = spacy.load('C:/Users/Garik/AppData/Roaming/Python/Python311/site-packages/pl_core_news_sm/pl_core_news_sm-3.5.0')
+nlp = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
 
 
 def prepare_text(text: str) -> list:

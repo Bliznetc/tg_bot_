@@ -272,6 +272,9 @@ def game(message):
         bot.register_next_step_handler(message, game)
         return
 
+    t_times = times
+    cnt_correct = 0
+
     while times > 0:
         times = times - 1
         poll = create_poll()
@@ -283,19 +286,20 @@ def game(message):
         poll_data = bot.stop_poll(message.chat.id, poll_message_id)
 
         print(poll_data)
-        for option in poll_data.options:
+        user_option = None
+        for i in range(4):
+            option = poll_data.options[i]
             print(option)  # Print each option for debugging
 
             num_voters = option.voter_count
             if num_voters:
-                user_option = option.text
+                user_option = i
                 break
 
-        if user_option:
-            bot.reply_to(message, f"Your result: {user_option}")
-        else:
-            bot.reply_to(message, "You haven't voted yet.")
+        if user_option == poll.correct_option_id:
+            cnt_correct += 1
 
+    bot.send_message(message.chat.id, f"Вы ответили правильно на {cnt_correct} вопросов из {t_times}")
 
 
 print(__name__)

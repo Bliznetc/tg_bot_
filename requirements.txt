@@ -13,4 +13,3 @@ mysql-connector-python==8.0.33
 protobuf==3.20.3
 asyncio==3.4.3
 spacy==3.5.3
-# pl_core_news_sm==3.5.0

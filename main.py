@@ -260,6 +260,7 @@ def game_get_num(message):
 
 
 def game(message):
+    global user_option
     try:
         times = get_valid_integer(message.text)
         if times is None:
@@ -279,9 +280,21 @@ def game(message):
         poll_message_id = poll_message.message_id
 
         time.sleep(10)
-        poll_results = bot.stop_poll(message.chat.id, poll_message_id)
+        poll_data = bot.stop_poll(message.chat.id, poll_message_id)
 
-        print(poll_results)
+        print(poll_data)
+        for option in poll_data.options:
+            print(option)  # Print each option for debugging
+
+            num_voters = option.voter_count
+            if num_voters:
+                user_option = option.text
+                break
+
+        if user_option:
+            bot.reply_to(message, f"Your result: {user_option}")
+        else:
+            bot.reply_to(message, "You haven't voted yet.")
 
 
 

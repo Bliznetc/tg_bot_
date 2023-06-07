@@ -13,6 +13,20 @@ import db_interface_test
 bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 
+class Poll:
+    def __init__(self, options, correct_option_id, question, is_anonymous):
+        self.options = options
+        self.correct_option_id = correct_option_id
+        self.question = question
+        self.is_anonymous = is_anonymous
+
+    def send(self, chat_id, bot):
+        poll_message= bot.send_poll(chat_id=chat_id, options=self.options,
+                      correct_option_id=self.correct_option_id, type='quiz',
+                      question=self.question, is_anonymous=self.is_anonymous)
+        return poll_message
+
+
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
 def start_handler(message):
@@ -26,8 +40,13 @@ def start_handler(message):
 @bot.message_handler(commands=['help'])
 def help_handler(message):
     bot.reply_to(message,
-                 'Type:\n"/quiz" - to get a quiz\n "/add_word" - to add a new word\n "/whole_dict" - to check all the words\n'
-                 '"/start_mailing" - to start getting quizes\n "/stop_mailing" - to stop mailing')
+                 'Type:\n"/quiz" - to get a quiz\n'
+                 '"/add_word" - to add a new word\n'
+                 '"/whole_dict" - to check all the words\n'
+                 '"/start_mailing" - to start getting quizzes\n'
+                 '"/stop_mailing" - to stop mailing\n'
+                 '"/change_mailing_time" - to change mailing time\n'
+                 '"/game" - to get a game\n')
 
 
 # Define a function to handle the /whole_dict command
@@ -45,7 +64,7 @@ def whole_dict_handler(message):
     bot.send_document(chat_id=message.chat.id, document=open(file_path, "rb"))
     os.remove(file_path)
     bot.send_message(chat_id=message.chat.id, text="Файл успешно сгенерирован")
-    
+
     print(time.time() - t, "out")
 
 
@@ -103,6 +122,21 @@ def generate_quiz():
     return word_number, answer_options
 
 
+# Creates a poll
+def create_poll():
+    word_number, answer_options = generate_quiz()
+    for answer in answer_options:
+        answer['word'] = answer['word'].capitalize()
+        answer['translation'] = answer['translation'].capitalize()
+
+    # Отправка опроса в чат
+    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']}?\n"
+    possible_answers = [answer['translation'] for answer in answer_options]
+
+    poll = Poll(possible_answers, word_number, quiz_text, False)
+    return poll
+
+
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(MesOrNum, need_list=None):
@@ -115,22 +149,10 @@ def send_quiz(MesOrNum, need_list=None):
         chat_id = MesOrNum.chat.id
         need_list.append(chat_id)
 
-    word_number, answer_options = generate_quiz()
-    
-    for answer in answer_options:
-        answer['word'] = answer['word'].capitalize()
-        answer['translation'] = answer['translation'].capitalize()
-
-    # Отправка опроса в чат
-    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']}?\n"
-    possible_answers = [answer['translation'] for answer in answer_options]
-
-    # print(need_list)
-
+    poll = create_poll()
     for chat_id1 in need_list:
-        bot.send_poll(chat_id1, options=possible_answers, correct_option_id=word_number, type='quiz',
-                      question=quiz_text)
-    
+        poll.send(chat_id1, bot)
+
 
 # function to send quizzes to the users
 def check_send_quiz():
@@ -152,6 +174,14 @@ def set_interval(func, sec):
     return t
 
 
+def get_valid_integer(text):
+    while True:
+        try:
+            return int(text)
+        except ValueError:
+            return None
+
+
 # updates user's mailing status
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
@@ -160,7 +190,17 @@ def start_mailing(message):
 
 
 def start_mailing_time(message):
-    minutes = int(message.text)
+    try:
+        minutes = get_valid_integer(message.text)
+        if minutes is None:
+            bot.reply_to(message, 'Пожалуйста, введите число')
+            bot.register_next_step_handler(message, change_mailing_time)
+            return
+    except:
+        bot.reply_to(message, 'Пожалуйста, введите число')
+        bot.register_next_step_handler(message, change_mailing_time)
+        return
+
     # запуск рассылки, время переводится в секунды
     f = db_interface_test.started_mailing(message.chat.id)
     if f == 0:
@@ -171,6 +211,7 @@ def start_mailing_time(message):
         bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
 
 
+# Stops mailing
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
     f = db_interface_test.started_mailing(message.chat.id)
@@ -180,6 +221,85 @@ def stop_mailing(message):
         db_interface_test.update_mailing(message.chat.id, 0)
     else:
         bot.send_message(message.chat.id, "У Вас не запущена рассылка")
+
+
+# Changes a period of mailing
+@bot.message_handler(commands=['change_mailing_time'])
+def change_mailing_time_0(message):
+    bot.reply_to(message, 'Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)')
+    bot.register_next_step_handler(message, change_mailing_time)
+
+
+def change_mailing_time(message):
+    try:
+        minutes = get_valid_integer(message.text)
+        if minutes is None:
+            bot.reply_to(message, 'Пожалуйста, введите число')
+            bot.register_next_step_handler(message, change_mailing_time)
+            return
+    except:
+        bot.reply_to(message, 'Пожалуйста, введите число')
+        bot.register_next_step_handler(message, change_mailing_time)
+        return
+
+    f = db_interface_test.started_mailing(message.chat.id)
+
+    if f != 0:
+        # t.cancel()
+        bot.send_message(message.chat.id, "Изменил время")
+        db_interface_test.update_mailing(message.chat.id, minutes)
+    else:
+        bot.send_message(message.chat.id, "У Вас не запущена рассылка")
+
+
+# Creates a game for users
+@bot.message_handler(commands=['game'])
+def game_get_num(message):
+    bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
+    bot.register_next_step_handler(message, game)
+
+
+def game(message):
+    global user_option
+    try:
+        times = get_valid_integer(message.text)
+        if times is None:
+            bot.reply_to(message, 'Пожалуйста, введите число')
+            bot.register_next_step_handler(message, game)
+            return
+    except:
+        bot.reply_to(message, 'Пожалуйста, введите число')
+        bot.register_next_step_handler(message, game)
+        return
+
+    t_times = times
+    cnt_correct = 0
+
+    while times > 0:
+        times = times - 1
+        poll = create_poll()
+
+        poll_message = poll.send(message.chat.id, bot)
+        poll_message_id = poll_message.message_id
+
+        time.sleep(10)
+        poll_data = bot.stop_poll(message.chat.id, poll_message_id)
+
+        print(poll_data)
+        user_option = None
+        for i in range(4):
+            option = poll_data.options[i]
+            print(option)  # Print each option for debugging
+
+            num_voters = option.voter_count
+            if num_voters:
+                user_option = i
+                break
+
+        if user_option == poll.correct_option_id:
+            cnt_correct += 1
+
+    bot.send_message(message.chat.id, f"Вы ответили правильно на {cnt_correct} вопросов из {t_times}")
 
 
 print(__name__)

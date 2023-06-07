@@ -12,7 +12,7 @@ import db_interface_test
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
-
+#зачем нам это
 class Poll:
     def __init__(self, options, correct_option_id, question, is_anonymous):
         self.options = options

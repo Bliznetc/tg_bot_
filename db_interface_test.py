@@ -268,3 +268,15 @@ def get_needed_users():
         print(cur_list)
         cursor.close()
         return cur_list
+    
+def get_user_ids():
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+
+        query = "SELECT user_id FROM User_Dictionaries"
+        cursor.execute(query)
+        resultOfQuery = cursor.fetchall()
+        
+        listOfUserIds = list(map(lambda x: x[0], resultOfQuery))
+
+        return listOfUserIds

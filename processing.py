@@ -42,8 +42,7 @@ def get_word_type(new_key) -> str:
 
 def translate_polish_to_english(word):
     translator = Translator()
-    translation = translator.translate(word, src='pl', dest='en')
-    print(translation.text)
+    translation = translator.translate(text=word, src='pl', dest='en')
     return translation.text
 
 
@@ -61,7 +60,7 @@ def get_word_type_en(new_key) -> str:
 
 # print(get_word_type("labirynt"))
 
-# print(translate_polish_to_english("malina"))
+print(translate_polish_to_english("malina"))
 
 # print("JEND")
 

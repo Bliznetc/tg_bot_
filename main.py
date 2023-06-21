@@ -32,7 +32,7 @@ class Poll:
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    reply_text = db_interface_test.store(message.chat.id, "user", 0)
+    reply_text = db_interface_test.store(message.chat.id, "user", 0) #change it ----------------------------------------------
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
@@ -54,7 +54,7 @@ def help_handler(message):
 def whole_dict_handler(message):
     t = time.time()
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
-    dictionary = db_interface_test.get_words()[1]
+    dictionary = db_interface_test.get_words()[1] #change it ---------------------------------------------
     file_path = "./cache/output.txt"
 
     with open(file_path, "w", encoding="utf-8") as file:
@@ -67,7 +67,7 @@ def whole_dict_handler(message):
 
     print(time.time() - t, "out")
 
-
+# this functionality has to be removed for some time
 # adds word to the dictionary.json file
 @bot.message_handler(commands=['add_word'])
 def add_word(message):
@@ -80,7 +80,7 @@ def add_word(message):
 def add_and_verify(message):
     bot.send_message(message.chat.id, "Добавляю...")
     listOfNewWords = pr.prepare_text(message.text)
-    db_interface_test.add_word_to_bd(listOfNewWords, message.chat.id)
+    db_interface_test.add_word_to_bd(listOfNewWords, message.chat.id) # change it -------------------------
     bot.send_message(message.chat.id, "Словарь обновлен!")
 
 
@@ -108,14 +108,14 @@ def add_word_from_file(message):
     bot.send_message(message.chat.id, "Добавляю...")
 
     listOfNewWords = pr.prepare_text(file_content)
-    db_interface_test.add_word_to_bd(listOfNewWords, message.chat.id)
+    db_interface_test.add_word_to_bd(listOfNewWords, message.chat.id) # change it ----------------------------
 
     bot.reply_to(message, "Словарь обновлен")
 
 
 # generates quiz when user types "/quiz"
 def generate_quiz():
-    dictionary = db_interface_test.get_words()[0][random.randint(0, 4)]
+    dictionary = db_interface_test.get_words()[0][random.randint(0, 4)] # change it --------------------------------------------------------
     answer_options = random.sample(dictionary, 4)
     word_number = random.randint(0, 3)
     print(answer_options)  # for debugging

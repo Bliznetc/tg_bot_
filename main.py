@@ -32,7 +32,7 @@ class Poll:
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    reply_text = db_interface_test.store(message.chat.id, "user", 0) #change it ----------------------------------------------
+    reply_text = db_interface_test.store(message.chat.id, "user", 0) #change it -сделано---------------------------------------------
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 

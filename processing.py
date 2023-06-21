@@ -1,11 +1,8 @@
-# Обработка текста со словами необходимо немного
-# усовершенствовать эту функцию (неправильный ввод пользователей)
 import spacy
 from googletrans import Translator
+import time
 
-nlp = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
-nlp1 = spacy.load('en_core_web_sm/en_core_web_sm-3.5.0')
-
+polishSpacyLibrary = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
 
 def prepare_text(text: str) -> list:
     arr = text.split(';')
@@ -26,43 +23,21 @@ def prepare_text(text: str) -> list:
     return result
 
 
-def get_word_type(new_key) -> str:
-    return get_word_type_en(translate_polish_to_english(new_key))
-    # doc = nlp(new_key)
-    # word_type = doc[0].pos_
-    # word_type = word_type.lower()
-    #
-    # if word_type == 'noun' or word_type == 'adv' or word_type == 'adj' or word_type == 'verb':
-    #     vari = 1
-    # else:
-    #     word_type = 'other'
-    #
-    # return word_type
-
-
-def translate_polish_to_english(word):
-    translator = Translator()
-    translation = translator.translate(text=word, src='pl', dest='en')
-    return translation.text
-
-
-def get_word_type_en(new_key) -> str:
-    doc = nlp1(new_key)
+def get_word_type(word: str) -> str:
+    doc = polishSpacyLibrary(word)
     word_type = doc[0].pos_
     word_type = word_type.lower()
-
-    if word_type == 'noun' or word_type == 'adv' or word_type == 'adj' or word_type == 'verb':
-        vari = 1
-    else:
+    
+    if word_type != 'noun' and word_type != 'adv' and word_type != 'adj' and word_type != 'verb':
         word_type = 'other'
-
+    
     return word_type
 
-# print(get_word_type("labirynt"))
+def translate_to_english(word, src_language):
+    translator = Translator()
+    translation = translator.translate(text=word, src=f"{src_language}", dest='en')
+    print(translation.text)
+    return translation.text
 
-print(translate_polish_to_english("malina"))
-
-# print("JEND")
-
-# print(get_word_type_en(translate_polish_to_english("papryka")))
-# print(prepare_text("niemiły - неприятный"))
+# if __name__=="__main__":
+#     pass

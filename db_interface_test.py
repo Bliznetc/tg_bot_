@@ -34,11 +34,11 @@ part_to_num = {
 
 # Добавляет пользователя в database
 def store(user_id: int, access: str, mailing: bool):
-    t = time.time()
+    # t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query_check = "SELECT user_id FROM User_Dictionaries"
+        query_check = "SELECT user_id FROM Users"
         cursor.execute(query_check)
         data = [i[0] for i in cursor.fetchall()]
 
@@ -48,7 +48,7 @@ def store(user_id: int, access: str, mailing: bool):
             json_data = json.dumps([])
             print(user_id, access, json_data, mailing)
             # Insert user data into the database
-            query = "INSERT INTO User_Dictionaries (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
+            query = "INSERT INTO Users (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
             cursor.execute(query, (user_id, access, json_data, mailing))
             # Commit the changes and close the connection
             connection.commit()
@@ -61,7 +61,7 @@ def store(user_id: int, access: str, mailing: bool):
 
 # Получает все слова, которые есть в бд
 def get_words():
-    t = time.time()
+    # t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
         # Выполнение SQL-запроса
@@ -87,11 +87,11 @@ def get_words():
 
 # Получает все слова, которые есть в словаре юзера
 def get_words_by_user_id(id):
-    t = time.time()
+    # t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
         # Выполнение SQL-запроса
-        query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = {id}"
+        query = f"SELECT dictionary FROM Users WHERE user_id = {id}"
         cursor.execute(query)
 
         # Получение результатов
@@ -115,23 +115,23 @@ def check_in (new_key, dictionary):
 
 # Добавляет список слов в database
 def add_word_to_bd(arr: list, user_id: int):
-    t = time.time()
+    # t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
         for item in arr:
             new_dict = [{"word": item[0], "degree": 0, "translation": item[1]}]
             type = processing.get_word_type(item[0])
-            print (new_dict)
+            print(new_dict)
 
             # Проверка на уникальность
             cur_dictionary = get_words_by_user_id(user_id)
             f = check_in(item[0], cur_dictionary)
             if f == 0:
-                continue;
+                continue
 
             # добавление слов к словарю юзера
-            query = f"SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
+            query = f"SELECT dictionary FROM Users WHERE user_id = %s"
             cursor.execute(query, (user_id,))
             existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
 
@@ -141,13 +141,13 @@ def add_word_to_bd(arr: list, user_id: int):
             else:
                 merged_dict = new_dict
 
-            query = f"UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
+            query = f"UPDATE Users SET dictionary = %s WHERE user_id = %s"
             cursor.execute(query, (json.dumps(merged_dict), user_id))
             connection.commit()
 
 
             # Проверка, что добавляет admin и слово уникальное
-            query = f"SELECT access FROM User_Dictionaries WHERE user_id = {user_id}"
+            query = f"SELECT access FROM Users WHERE user_id = {user_id}"
             cursor.execute(query)
 
             # Получение результатов
@@ -159,7 +159,7 @@ def add_word_to_bd(arr: list, user_id: int):
             cur_dictionary = get_words()[0][to_dict_num]
             f = check_in(item[0], cur_dictionary)
             if f == 0:
-                continue;
+                continue
 
             # Вторая часть добавления: Добавление слов в словарь по частям речи
             query = f"SELECT dictionary FROM PartsOfSpeech WHERE id = %s"
@@ -188,7 +188,7 @@ def started_mailing(current_user_id):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query = f"SELECT Mailing FROM User_Dictionaries WHERE user_id = {current_user_id}"
+        query = f"SELECT Mailing FROM Users WHERE user_id = {current_user_id}"
         cursor.execute(query)
 
         # Получение результатов
@@ -203,7 +203,7 @@ def update_mailing(current_user_id, new_value):
         cursor = connection.cursor()
 
         # Выполнение SQL-запроса
-        query = f"UPDATE User_Dictionaries SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
+        query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
         cursor.execute(query)
 
         connection.commit()
@@ -221,7 +221,7 @@ def check_user_exists(user_id):
         cursor = connection.cursor()
 
         # Выполнение SQL-запроса
-        query = f"SELECT COUNT(*) FROM User_Dictionaries WHERE user_id = {user_id}"
+        query = f"SELECT COUNT(*) FROM Users WHERE user_id = {user_id}"
         cursor.execute(query)
 
         # Получение результата
@@ -239,7 +239,7 @@ def get_needed_users():
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query = f"SELECT user_id, sent_time, Mailing FROM User_Dictionaries WHERE Mailing != 0"
+        query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
         cursor.execute(query)
 
         result = cursor.fetchall()
@@ -273,7 +273,7 @@ def get_user_ids():
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query = "SELECT user_id FROM User_Dictionaries"
+        query = "SELECT user_id FROM Users"
         cursor.execute(query)
         resultOfQuery = cursor.fetchall()
         

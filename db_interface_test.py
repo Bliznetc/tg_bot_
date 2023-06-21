@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 import processing
 
+
 t = time.time()
 try:
     connection_pool = mysql.connector.pooling.MySQLConnectionPool(

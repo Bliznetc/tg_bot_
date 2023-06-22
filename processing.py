@@ -6,7 +6,13 @@ polishSpacyLibrary = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
 
 def prepare_text(text: str) -> list:
     arr = text.split(';')
-    result = []
+    new_dictionary = {
+        "noun": [],
+        "verb": [],
+        "adj": [],
+        "adv": [],
+        "other": []
+    }
     for x in arr:
         if x.find('-') == -1:
             continue
@@ -14,13 +20,13 @@ def prepare_text(text: str) -> list:
         new_key = new_key.replace('\n', '')
         new_key = new_key.lower()
         if new_key[-1] == ' ':
-            new_key = new_key[0:len(new_key) - 1]
-
+            new_key = new_key[:-1]
         if new_meaning[0] == ' ':
-            new_meaning = new_meaning[1:len(new_meaning)]
-        word_type = get_word_type(new_key)
-        result.append((new_key, new_meaning, word_type))
-    return result
+            new_meaning = new_meaning[1:]
+
+        partOfSpeech = get_word_type(new_key)
+        new_dictionary[partOfSpeech].append({"word": new_key, "degree": 0, "translation": new_meaning})   
+    return new_dictionary
 
 
 def get_word_type(word: str) -> str:

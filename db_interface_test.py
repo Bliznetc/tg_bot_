@@ -32,7 +32,7 @@ part_to_num = {
     "verb" : 4
 }
 
-
+#done
 # Добавляет пользователя в database
 def store(user_id: int, access: str, mailing: bool):
     # t = time.time()
@@ -59,7 +59,7 @@ def store(user_id: int, access: str, mailing: bool):
         # print(time.time() - t)
         return text
 
-
+#done
 # Получает все слова, которые есть в бд
 def get_words():
     # t = time.time()
@@ -85,7 +85,7 @@ def get_words():
         # print(time.time() - t)
         return dict_parts, all_dict
 
-
+#done
 # Получает все слова, которые есть в словаре юзера
 def get_words_by_user_id(id):
     # t = time.time()
@@ -103,7 +103,7 @@ def get_words_by_user_id(id):
         cursor.close()
         return dictionary
 
-
+#менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Проверка на уникальность
 def check_in (new_key, dictionary):
     f = 1
@@ -113,7 +113,7 @@ def check_in (new_key, dictionary):
             break
     return f
 
-
+#менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Добавляет список слов в database
 def add_word_to_bd(arr: list, user_id: int):
     # t = time.time()
@@ -183,7 +183,7 @@ def add_word_to_bd(arr: list, user_id: int):
         cursor.close()
         # print(time.time() - t)
 
-
+#ok$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # Возвращает значение Mailing
 def started_mailing(current_user_id):
     with connection_pool.get_connection() as connection:
@@ -197,7 +197,7 @@ def started_mailing(current_user_id):
         cursor.close()
         return cur_json[0][0]
 
-
+#ok$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # обновляет значение Mailing
 def update_mailing(current_user_id, new_value):
     with connection_pool.get_connection() as connection:
@@ -214,27 +214,7 @@ def update_mailing(current_user_id, new_value):
 
         cursor.close()
 
-
-# Добавил проверку прямо в store()
-# Проверяет, существует ли user с указанным id
-def check_user_exists(user_id):
-    with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
-
-        # Выполнение SQL-запроса
-        query = f"SELECT COUNT(*) FROM Users WHERE user_id = {user_id}"
-        cursor.execute(query)
-
-        # Получение результата
-        result = cursor.fetchone()[0]
-
-        cursor.close()
-        if result == 0:
-            return False
-        else:
-            return True
-
-
+#ok$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # Возвращает список всех юзеров, которым нужно отправить квиз в текущий момент
 def get_needed_users():
     with connection_pool.get_connection() as connection:
@@ -269,7 +249,8 @@ def get_needed_users():
         print(cur_list)
         cursor.close()
         return cur_list
-    
+
+#done    
 def get_user_ids():
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()

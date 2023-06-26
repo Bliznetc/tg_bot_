@@ -299,3 +299,5 @@ print(__name__)
 
 if __name__ == '__main__':
     bot.polling()
+
+print('СОСИ')

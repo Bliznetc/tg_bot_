@@ -68,9 +68,9 @@ def get_all_words():
             query = "SELECT content FROM Dictionaries"
             cursor.execute(query)
 
-            divededDictionaries = [json.loads(i[0]) for i in cursor.fetchall()]
-            bigDictionary = {k: [elem for d in divededDictionaries for elem in d[k]] for k in
-                             divededDictionaries[0].keys()}  # python magic
+            dividedDictionaries = [json.loads(i[0]) for i in cursor.fetchall()]
+            bigDictionary = {k: [elem for d in dividedDictionaries for elem in d[k]] for k in
+                             dividedDictionaries[0].keys()}  # python magic # это какой-то реальный мэджик
     return bigDictionary
 
 
@@ -86,6 +86,7 @@ def add_new_dictionary(new_dictionary: dict, dict_id: str):
 
 
 # potentially functions below can be separated into different file
+# returns access of a user by user_id
 def get_user_access(user_id: int):
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
@@ -97,6 +98,19 @@ def get_user_access(user_id: int):
     return resultOfQuery[0][0]
 
 
+# returns dict_id of a user by user_id
+def get_user_dict_id(user_id: int):
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            query = "SELECT dict_id FROM Users WHERE user_id = %s"
+            cursor.execute(query, (user_id,))
+
+            resultOfQuery = cursor.fetchall()
+            connection.commit()
+    return resultOfQuery[0][0]
+
+
+# returns list of users' id
 def get_user_ids():
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
@@ -109,32 +123,71 @@ def get_user_ids():
     return listOfUserIds
 
 
-# returns a period of time
-def started_mailing(current_user_id):
+# returns value of Mailing
+def started_mailing(user_id: int):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query = f"SELECT Mailing FROM Users WHERE user_id = {current_user_id}"
+        query = f"SELECT Mailing FROM Users WHERE user_id = {user_id}"
         cursor.execute(query)
 
-        # Получение результатов
         cur_json = cursor.fetchall()
         cursor.close()
         return cur_json[0][0]
 
 
-# обновляет значение Mailing
-def update_mailing(current_user_id, new_value):
+# updates value of Mailing
+def update_mailing(user_id: int, new_value):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        # Выполнение SQL-запроса
-        query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
+        query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {user_id}"
         cursor.execute(query)
 
         connection.commit()
-
-        # Выведите сообщение об успешном добавлении
         print("Изменил значение Mailing")
-
         cursor.close()
+
+
+# Returns list of users, whom we need to send a quiz to
+def get_needed_users():
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+
+        query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
+        cursor.execute(query)
+
+        result = cursor.fetchall()
+        cur_list = []
+        for a in result:
+            cur_time = a[1]
+            period = a[2]
+            sent_h = cur_time.seconds // 3600
+            sent_m = (cur_time.seconds // 60) % 60
+
+            now = datetime.now()
+            now_h = now.hour
+            now_m = now.minute
+
+            sent_allm = sent_h * 60 + sent_m
+            now_allm = now_h * 60 + now_m
+            if now_allm < sent_allm:
+                now_allm += 1440
+            if (now_allm - sent_allm) % period == 0:
+                cur_list.append(a[0])
+
+        print(cur_list)
+        cursor.close()
+        return cur_list
+
+
+# не понятно, зачем
+# менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Проверка на уникальность
+# def check_in (new_key, dictionary):
+#     f = 1
+#     for word in dictionary:
+#         if word['word'] == new_key:
+#             f = 0
+#             break
+#     return f

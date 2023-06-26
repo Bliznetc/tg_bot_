@@ -1,26 +1,26 @@
 import os
 import threading
 import time
-
 import telebot
 from telebot import types
 
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
-import random
 import processing as pr
 import db_interface
+import polls
 
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
+
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    reply_text = db_interface.userRegistration(message.chat.id) #change it -сделано---------------------------------------------
+    reply_text = db_interface.userRegistration(message.chat.id)  # change it -сделано---------------------------------------------
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
@@ -33,6 +33,7 @@ def help_handler(message):
                  '"/start_mailing" - to start getting quizzes\n'
                  '"/stop_mailing" - to stop mailing\n'
                  '"/change_mailing_time" - to change mailing time\n'
+                 '"/change_dict_id" - to change level of your dictionary\n'
                  '"/game" - to get a game\n')
 
 
@@ -60,7 +61,7 @@ def whole_dict_handler(message):
 def add_dictionary_from_file(message):
     if db_interface.get_user_access(message.chat.id) == 'user':
         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
-    else: 
+    else:
         file_info = message.document
         file_id = file_info.file_id
         file_name = file_info.file_name
@@ -87,53 +88,35 @@ def add_dictionary_from_file(message):
         bot.reply_to(message, text)
 
 
-# generates quiz when user types "/quiz"
-def generate_quiz():
-    dictionary = db_interface.get_words()[0][random.randint(0, 4)] # change it --------------------------------------------------------
-    answer_options = random.sample(dictionary, 4)
-    word_number = random.randint(0, 3)
-    print(answer_options)  # for debugging
-    return word_number, answer_options
-
-
-# Creates a poll
-def create_poll():
-    word_number, answer_options = generate_quiz()
-    for answer in answer_options:
-        answer['word'] = answer['word'].capitalize()
-        answer['translation'] = answer['translation'].capitalize()
-
-    # Отправка опроса в чат
-    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']}?\n"
-    possible_answers = [answer['translation'] for answer in answer_options]
-
-    poll = Poll(possible_answers, word_number, quiz_text, False)
-    return poll
-
-
 # sends quiz
 @bot.message_handler(commands=['quiz'])
 def send_quiz(MesOrNum, need_list=None):
-    # if need_list is None:
-    #     need_list = []
+    if need_list is None:
+        need_list = []
 
-    # if isinstance(MesOrNum, int):
-    #     chat_id = MesOrNum
-    # else:
-    #     chat_id = MesOrNum.chat.id
-    #     need_list.append(chat_id)
+    if isinstance(MesOrNum, int):
+        chat_id = MesOrNum
+    else:
+        chat_id = MesOrNum.chat.id
+        need_list.append(chat_id)
 
-    # poll = create_poll()
-    # for chat_id1 in need_list:
-    #     poll.send(chat_id1, bot)
-    bot.send_message(chat_id=MesOrNum.chat.id, text="Временно недоступно")
+    polls_by_dict_id = {}
+    for user_id in need_list:
+        dict_id = db_interface.get_user_dict_id(user_id)
+        if dict_id in polls_by_dict_id:
+            polls_by_dict_id[dict_id].send(user_id, bot)
+            continue
+
+        polls_by_dict_id[dict_id] = polls.create_poll(dict_id)
+        polls_by_dict_id[dict_id].send(user_id, bot)
+
+    print("Квизы успещно отправлены")
 
 
 # function to send quizzes to the users
 def check_send_quiz():
-    # need_list = db_interface.get_needed_users()
-    # send_quiz(0, need_list)
-    pass
+    need_list = db_interface.get_needed_users()
+    send_quiz(0, need_list)
 
 
 # checks if there are users asking for quiz
@@ -161,9 +144,13 @@ def get_valid_integer(text):
 # updates user's mailing status
 @bot.message_handler(commands=['start_mailing'])
 def start_mailing(message):
-    # bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")
-    # bot.register_next_step_handler(message, start_mailing_time)
-    bot.send_message(chat_id=message.chat.id, text="Временно недопустимая команда")
+    f = db_interface.started_mailing(message.chat.id)
+    if f != 0:
+        bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
+        return
+
+    bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")
+    bot.register_next_step_handler(message, start_mailing_time)
 
 
 def start_mailing_time(message):
@@ -178,7 +165,6 @@ def start_mailing_time(message):
         bot.register_next_step_handler(message, change_mailing_time)
         return
 
-    # запуск рассылки, время переводится в секунды
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
         bot.send_message(message.chat.id, "Запустил рассылку")
@@ -191,22 +177,24 @@ def start_mailing_time(message):
 # Stops mailing
 @bot.message_handler(commands=['stop_mailing'])
 def stop_mailing(message):
-    # f = db_interface.started_mailing(message.chat.id)
-    # if f != 0:
-    #     # t.cancel()
-    #     bot.send_message(message.chat.id, "Остановил рассылку")
-    #     db_interface.update_mailing(message.chat.id, 0)
-    # else:
-    #     bot.send_message(message.chat.id, "У Вас не запущена рассылка")
-    bot.send_message(chat_id=message.chat.id, text="Временно недопустимая команда")
+    f = db_interface.started_mailing(message.chat.id)
+    if f != 0:
+        bot.send_message(message.chat.id, "Остановил рассылку")
+        db_interface.update_mailing(message.chat.id, 0)
+    else:
+        bot.send_message(message.chat.id, "У Вас не запущена рассылка")
 
 
 # Changes a period of mailing
 @bot.message_handler(commands=['change_mailing_time'])
 def change_mailing_time_0(message):
-    # bot.reply_to(message, 'Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)')
-    # bot.register_next_step_handler(message, change_mailing_time)
-    bot.send_message(chat_id=message.chat.id, text="Временно недопустимая команда")
+    f = db_interface.started_mailing(message.chat.id)
+    if f == 0:
+        bot.send_message(message.chat.id, "У Вас не запущена рассылка")
+        return
+
+    bot.reply_to(message, 'Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)')
+    bot.register_next_step_handler(message, change_mailing_time)
 
 
 def change_mailing_time(message):
@@ -222,9 +210,7 @@ def change_mailing_time(message):
         return
 
     f = db_interface.started_mailing(message.chat.id)
-
     if f != 0:
-        # t.cancel()
         bot.send_message(message.chat.id, "Изменил время")
         db_interface.update_mailing(message.chat.id, minutes)
     else:
@@ -234,9 +220,8 @@ def change_mailing_time(message):
 # Creates a game for users
 @bot.message_handler(commands=['game'])
 def game_get_num(message):
-    # bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
-    # bot.register_next_step_handler(message, game)
-    bot.send_message(chat_id=message.chat.id, text="Временно недопустимая команда")
+    bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
+    bot.register_next_step_handler(message, game)
 
 
 def game(message):
@@ -257,7 +242,7 @@ def game(message):
 
     while times > 0:
         times = times - 1
-        poll = create_poll()
+        poll = polls.create_poll()
 
         poll_message = poll.send(message.chat.id, bot)
         poll_message_id = poll_message.message_id
@@ -301,7 +286,7 @@ def handle_buttons(message):
 
 
 print(__name__)
-# set_interval(check_send_quiz, 60)
+set_interval(check_send_quiz, 60)
 
 if __name__ == '__main__':
     bot.polling()

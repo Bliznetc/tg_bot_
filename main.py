@@ -302,3 +302,4 @@ if __name__ == '__main__':
 
 print('СОСИ')
 print('Cоси')
+print('что')

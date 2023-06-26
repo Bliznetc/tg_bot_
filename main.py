@@ -10,22 +10,7 @@ import processing as pr
 import db_interface
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
-
-#зачем нам это
-class Poll:
-    def __init__(self, options, correct_option_id, question, is_anonymous):
-        self.options = options
-        self.correct_option_id = correct_option_id
-        self.question = question
-        self.is_anonymous = is_anonymous
-
-    def send(self, chat_id, bot):
-        poll_message= bot.send_poll(chat_id=chat_id, options=self.options,
-                      correct_option_id=self.correct_option_id, type='quiz',
-                      question=self.question, is_anonymous=self.is_anonymous)
-        return poll_message
-
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])

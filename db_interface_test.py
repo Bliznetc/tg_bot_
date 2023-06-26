@@ -2,8 +2,9 @@ import json
 import mysql.connector
 import datetime
 from datetime import datetime
-
 import time
+import processing
+
 
 t = time.time()
 try:
@@ -22,13 +23,23 @@ except mysql.connector.Error as e:
 print(time.time() - t, "takes to set up the connection")
 
 
+# It should be const all the time. It is to know the number in the list of words for each part
+part_to_num = {
+    "adj" : 0,
+    "adv" : 1,
+    "noun" : 2,
+    "other" : 3,
+    "verb" : 4
+}
+
+#done
 # Добавляет пользователя в database
 def store(user_id: int, access: str, mailing: bool):
-    t = time.time()
+    # t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query_check = "SELECT user_id FROM User_Dictionaries"
+        query_check = "SELECT user_id FROM Users"
         cursor.execute(query_check)
         data = [i[0] for i in cursor.fetchall()]
 
@@ -38,24 +49,50 @@ def store(user_id: int, access: str, mailing: bool):
             json_data = json.dumps([])
             print(user_id, access, json_data, mailing)
             # Insert user data into the database
-            query = "INSERT INTO User_Dictionaries (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
+            query = "INSERT INTO Users (user_id, access, dictionary, Mailing) VALUES (%s, %s, %s, %s)"
             cursor.execute(query, (user_id, access, json_data, mailing))
             # Commit the changes and close the connection
             connection.commit()
             text = "Добро пожаловать!"
 
         cursor.close()
-        print(time.time() - t)
+        # print(time.time() - t)
         return text
 
-
-# Получает все слова
+#done
+# Получает все слова, которые есть в бд
 def get_words():
-    t = time.time()
+    # t = time.time()
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
         # Выполнение SQL-запроса
-        query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = 955008318"
+        query = "SELECT dictionary FROM PartsOfSpeech"
+        cursor.execute(query)
+
+        # Получение результатов
+        cur_dictionary_json = cursor.fetchall()
+
+        dict_parts = [] # Словарь, разбитый по частям речи
+        all_dict = [] # Полный словарь
+        for i in cur_dictionary_json:
+            dictionary = json.loads(i[0])
+            dict_parts.append(dictionary)  # Объединение существующего списка с новым списком
+            for word in dictionary:
+                all_dict.append(word)
+
+        cursor.close()
+
+        # print(time.time() - t)
+        return dict_parts, all_dict
+
+#done
+# Получает все слова, которые есть в словаре юзера
+def get_words_by_user_id(id):
+    # t = time.time()
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+        # Выполнение SQL-запроса
+        query = f"SELECT dictionary FROM Users WHERE user_id = {id}"
         cursor.execute(query)
 
         # Получение результатов
@@ -64,47 +101,26 @@ def get_words():
         dictionary = json.loads(data)
 
         cursor.close()
-
-        print(time.time() - t)
         return dictionary
 
-
-# Добавляет список слов в database
-def add_word_to_bd(arr: list, user_id: int):
-    t = time.time()
-    with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
-
-        new_dict = [{"word": item[0], "degree": 0, "translation": item[1]} for item in arr]
-
-        query = "SELECT dictionary FROM User_Dictionaries WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        existing_dict = cursor.fetchone()[0]  # Получение существующего списка словарей
-
-        if existing_dict:
-            merged_dict = json.loads(existing_dict)
-            merged_dict.extend(new_dict)  # Объединение существующего списка с новым списком
-        else:
-            merged_dict = new_dict
-
-        query = "UPDATE User_Dictionaries SET dictionary = %s WHERE user_id = %s"
-        cursor.execute(query, (json.dumps(merged_dict), user_id))
-
-        connection.commit()
-
-        # Вывод сообщения об успешном добавлении
-        print("Элементы успешно добавлены в ячейку базы данных.")
-
-        cursor.close()
-        print(time.time() - t)
+#менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Проверка на уникальность
+def check_in (new_key, dictionary):
+    f = 1
+    for word in dictionary:
+        if word['word'] == new_key:
+            f = 0
+            break
+    return f
 
 
+#ok$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # Возвращает значение Mailing
 def started_mailing(current_user_id):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query = f"SELECT Mailing FROM User_Dictionaries WHERE user_id = {current_user_id}"
+        query = f"SELECT Mailing FROM Users WHERE user_id = {current_user_id}"
         cursor.execute(query)
 
         # Получение результатов
@@ -112,14 +128,14 @@ def started_mailing(current_user_id):
         cursor.close()
         return cur_json[0][0]
 
-
+#ok$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # обновляет значение Mailing
 def update_mailing(current_user_id, new_value):
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
         # Выполнение SQL-запроса
-        query = f"UPDATE User_Dictionaries SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
+        query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {current_user_id}"
         cursor.execute(query)
 
         connection.commit()
@@ -129,33 +145,13 @@ def update_mailing(current_user_id, new_value):
 
         cursor.close()
 
-
-# Добавил проверку прямо в store()
-# Проверяет, существует ли user с указанным id
-def check_user_exists(user_id):
-    with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
-
-        # Выполнение SQL-запроса
-        query = f"SELECT COUNT(*) FROM User_Dictionaries WHERE user_id = {user_id}"
-        cursor.execute(query)
-
-        # Получение результата
-        result = cursor.fetchone()[0]
-
-        cursor.close()
-        if result == 0:
-            return False
-        else:
-            return True
-
-
+#ok$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # Возвращает список всех юзеров, которым нужно отправить квиз в текущий момент
 def get_needed_users():
     with connection_pool.get_connection() as connection:
         cursor = connection.cursor()
 
-        query = f"SELECT user_id, sent_time, Mailing FROM User_Dictionaries WHERE Mailing != 0"
+        query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
         cursor.execute(query)
 
         result = cursor.fetchall()
@@ -177,7 +173,6 @@ def get_needed_users():
             if now_allm < sent_allm:
                 now_allm += 1440
 
-            # print(now_allm, sent_allm, (now_allm - sent_allm), period)
             if (now_allm - sent_allm) % period == 0:
                 cur_list.append(a[0])
 
@@ -185,3 +180,16 @@ def get_needed_users():
         print(cur_list)
         cursor.close()
         return cur_list
+
+#done    
+def get_user_ids():
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+
+        query = "SELECT user_id FROM Users"
+        cursor.execute(query)
+        resultOfQuery = cursor.fetchall()
+        
+        listOfUserIds = list(map(lambda x: x[0], resultOfQuery))
+
+        return listOfUserIds

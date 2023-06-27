@@ -74,6 +74,18 @@ def get_all_words():
     return bigDictionary
 
 
+# returns list of all dict_ids
+def get_dict_ids():
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            query = "SELECT dict_id FROM Dictionaries"
+            cursor.execute(query, )
+
+            dictionary = cursor.fetchall()
+            dict_ids = [row[0] for row in dictionary]
+    return dict_ids
+
+
 # creates a new record in table Dictionaries
 def add_new_dictionary(new_dictionary: dict, dict_id: str):
     with connection_pool.get_connection() as connection:
@@ -149,6 +161,20 @@ def update_mailing(user_id: int, new_value):
         cursor.close()
 
 
+# updates dict_id of a user
+def update_dict_id(user_id: int, new_value: str):
+    with connection_pool.get_connection() as connection:
+        cursor = connection.cursor()
+
+        print(new_value, user_id)
+        query = "UPDATE Users SET dict_id = %s WHERE user_id = %s"
+        cursor.execute(query, (new_value, user_id))
+
+        connection.commit()
+        print("Изменил значение dict_id")
+        cursor.close()
+
+
 # Returns list of users, whom we need to send a quiz to
 def get_needed_users():
     with connection_pool.get_connection() as connection:
@@ -179,6 +205,7 @@ def get_needed_users():
         print(cur_list)
         cursor.close()
         return cur_list
+
 
 
 # не понятно, зачем

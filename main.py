@@ -1,7 +1,9 @@
 import os
 import threading
 import time
+
 import telebot
+from telebot import types
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
 import processing as pr
@@ -17,7 +19,8 @@ bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
-    reply_text = db_interface.userRegistration(message.chat.id)  # change it -сделано---------------------------------------------
+    reply_text = db_interface.userRegistration(
+        message.chat.id)  # change it -сделано---------------------------------------------
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
@@ -30,7 +33,7 @@ def help_handler(message):
                  '"/start_mailing" - to start getting quizzes\n'
                  '"/stop_mailing" - to stop mailing\n'
                  '"/change_mailing_time" - to change mailing time\n'
-                 '"/change_dict_id" - to change level of your dictionary\n'
+                 '"/change_dict" - to change level of your dictionary\n'
                  '"/game" - to get a game\n')
 
 
@@ -212,6 +215,26 @@ def change_mailing_time(message):
         db_interface.update_mailing(message.chat.id, minutes)
     else:
         bot.send_message(message.chat.id, "У Вас не запущена рассылка")
+
+
+# Changes user's dict_id
+@bot.message_handler(commands=['change_dict'])
+def change_dict(message):
+    keyboard = types.ReplyKeyboardMarkup()
+    dict_ids = db_interface.get_dict_ids()
+    for dict_id in dict_ids:
+        keyboard.row(dict_id)
+    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.register_next_step_handler(message, handle_buttons, dict_ids)
+
+
+def handle_buttons(message, dict_ids):
+    chosen_option = message.text
+    if chosen_option in dict_ids:
+        db_interface.update_dict_id(message.chat.id, chosen_option)
+        bot.send_message(message.chat.id, "Успешно изменил словарь")
+    else:
+        bot.send_message(message.chat.id, "Такой опции не было o_0")
 
 
 # Creates a game for users

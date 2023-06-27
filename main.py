@@ -2,9 +2,6 @@ import os
 import threading
 import time
 import telebot
-from telebot import types
-
-import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, Message
 import constants as const
 import processing as pr
@@ -265,24 +262,6 @@ def game(message):
             cnt_correct += 1
 
     bot.send_message(message.chat.id, f"Вы ответили правильно на {cnt_correct} вопросов из {t_times}")
-
-@bot.message_handler(commands=['change'])
-def button(message):
-    keyboard = types.ReplyKeyboardMarkup()
-    keyboard.row('Кнопка 1', 'Кнопка 2')
-    keyboard.row('Кнопка 3', 'Кнопка 4')
-    bot.send_message(message.chat.id, 'Проверка:', reply_markup=keyboard)
-
-@bot.message_handler(func=lambda message: True)
-def handle_buttons(message):
-    if message.text == 'Кнопка 1':
-        bot.send_message(message.chat.id, 'Вы выбрали кнопку 1')
-    elif message.text == 'Кнопка 2':
-        bot.send_message(message.chat.id, 'Вы выбрали кнопку 2')
-    elif message.text == 'Кнопка 3':
-        bot.send_message(message.chat.id, 'Вы выбрали кнопку 3')
-    elif message.text == 'Кнопка 4':
-        bot.send_message(message.chat.id, 'Вы выбрали кнопку 4')
 
 
 print(__name__)

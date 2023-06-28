@@ -39,7 +39,7 @@ class Poll:
 
 
 # generates quiz when user types "/quiz"
-def generate_quiz(dict_id='TEST'):
+def generate_quiz(dict_id='TEST_A1'):
     dictionary = db_interface.get_words_by_dict_id(dict_id)
     part_number = random.randint(0, 4)
 
@@ -49,7 +49,7 @@ def generate_quiz(dict_id='TEST'):
 
 
 # Creates a poll
-def create_poll(dict_id='TEST'):
+def create_poll(dict_id='TEST_A1'):
     word_number, answer_options = generate_quiz(dict_id)
     for answer in answer_options:
         answer['word'] = answer['word'].capitalize()

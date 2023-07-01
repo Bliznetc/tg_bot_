@@ -20,7 +20,7 @@ def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
     reply_text = db_interface.userRegistration(
-        message.chat.id)  # change it -сделано---------------------------------------------
+        message.chat.id)  
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 

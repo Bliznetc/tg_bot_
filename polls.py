@@ -58,7 +58,7 @@ def create_poll(dict_id='TEST_ALL'):
     quiz_text = f"Как переводится слово: {answer_options[word_number]['word']} [{answer_options[word_number]['transcription']}]?\n"
     possible_answers = [answer['translation'] for answer in answer_options]
 
-    poll = Poll(possible_answers, word_number, quiz_text, False)
+    poll = Poll(possible_answers, word_number, quiz_text, True)
     return poll
 
 

@@ -219,7 +219,7 @@ def fix_the_word(user_id: int, set_word: list):
             cursor.execute(query, (dict_id,))
 
             dictionary = json.loads(cursor.fetchall()[0][0])
-            for i in len(dictionary[partOfSpeech]):
+            for i in range(len(dictionary[partOfSpeech])):
                 if dictionary[partOfSpeech][i]['word'] == word:
                     del dictionary[partOfSpeech][i]
                     break
@@ -240,6 +240,7 @@ def fix_the_word(user_id: int, set_word: list):
             cursor.execute(query, (content, Dictionary))
 
             connection.commit()
+
             
             
 

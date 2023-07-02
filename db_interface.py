@@ -241,7 +241,7 @@ def fix_the_word(user_id: int, set_word: list):
 
             connection.commit()
     
-    return "Слова изменены"
+    return "Функция выполнена успешно"
 
             
             

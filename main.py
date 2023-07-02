@@ -33,8 +33,8 @@ def help_handler(message):
                  '"/start_mailing" - to start getting quizzes\n'
                  '"/stop_mailing" - to stop mailing\n'
                  '"/change_mailing_time" - to change mailing time\n'
-                 '"/change_dict" - to change level of your dictionary\n'
                  '"/game" - to get a game\n')
+# '"/change_dict" - to change level of your dictionary\n'
 
 
 @bot.message_handler(commands=['whole_dict'])
@@ -260,6 +260,7 @@ def game(message):
     t_times = times
     cnt_correct = 0
 
+    bot.send_message(message.chat.id, "На каждый вопрос у Вас будет 10 секунд")
     while times > 0:
         times = times - 1
         poll = polls.create_poll()

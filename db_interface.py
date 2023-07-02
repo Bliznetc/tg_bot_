@@ -208,6 +208,44 @@ def get_needed_users():
         return cur_list
 
 
+def fix_the_word(user_id: int, set_word: list):
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            dict_id = get_user_dict_id(user_id=user_id)
+            word, translation, transcription, partOfSpeech, Dictionary = set_word
+            
+            # Удаляем
+            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
+            cursor.execute(query, (dict_id,))
+
+            dictionary = json.loads(cursor.fetchall()[0][0])
+            for i in range(len(dictionary[partOfSpeech])):
+                if dictionary[partOfSpeech][i]['word'] == word:
+                    del dictionary[partOfSpeech][i]
+                    break
+            
+            content = json.dumps(dictionary)
+            query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
+            cursor.execute(query, (content, dict_id))
+            
+            # Добавляем
+            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
+            cursor.execute(query, (Dictionary,))
+
+            dictionary = json.loads(cursor.fetchall()[0][0])
+            dictionary[partOfSpeech].append({'word': word, 'degree': 0,'translation': translation, 'transcription': transcription})
+
+            content = json.dumps(dictionary)
+            query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
+            cursor.execute(query, (content, Dictionary))
+
+            connection.commit()
+    
+    return "Функция выполнена успешно"
+
+            
+            
+
 
 # не понятно, зачем
 # менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

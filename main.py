@@ -308,8 +308,40 @@ def game(message):
     bot.send_message(message.chat.id, f"Вы ответили правильно на {cnt_correct} вопросов из {t_times}")
 
 
+# Creates a game for users
+@bot.message_handler(commands=['improve_word'])
+def improve_word_0(message):
+    access = db_interface.get_user_access(message.chat.id)
+    if access != "admin":
+        bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
+        return
+    bot.send_message(message.chat.id, "формат: слово,перевод,транскрипция,часть речи")
+    bot.register_next_step_handler(message, improve_word_1)
+
+
+def improve_word_1(message):
+    arr = message.text.split(",")
+    keyboard = types.ReplyKeyboardMarkup()
+    dict_ids = db_interface.get_dict_ids()
+    for dict_id in dict_ids:
+        keyboard.row(dict_id)
+    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.register_next_step_handler(message, improve_word, arr)
+
+
+def improve_word(message, arr):
+    arr.append(message.text)
+    for i in range(len(arr)):
+        arr[i] = arr[i].lower()
+        print(arr[i])
+    bot.send_message(message.chat.id, f"слово - {arr[0]}, перевод - {arr[1]}, транскр - {arr[2]}, часть речи - {arr[3]}, словарь - {arr[4]}")
+    text = db_interface.fix_the_word(message.chat.id, arr)
+    bot.send_message(message.chat.id, text)
+
 print(__name__)
 set_interval(check_send_quiz, 60)
+
+
 
 if __name__ == '__main__':
     bot.polling()

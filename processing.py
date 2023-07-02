@@ -1,32 +1,64 @@
-# Обработка текста со словами необходимо немного
-# усовершенствовать эту функцию (неправильный ввод пользователей)
 import spacy
+from googletrans import Translator
+import time
 
-nlp = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
+polishSpacyLibrary = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
+englishSpacyLibrary = spacy.load('en_core_web_sm/en_core_web_sm-3.5.0')
 
 
-def prepare_text(text: str) -> list:
+def prepare_text(text: str) -> dict:
     arr = text.split(';')
-    result = []
+    new_dictionary = {
+        "noun": [],
+        "verb": [],
+        "adj": [],
+        "adv": [],
+        "other": []
+    }
     for x in arr:
         if x.find('-') == -1:
             continue
-        new_key, new_meaning = x.split('-', 1)
+        print(x)
+        new_key, new_meaning, new_transcription = x.split('-', 2)
         new_key = new_key.replace('\n', '')
         new_key = new_key.lower()
-        word_type = get_word_type(new_key)
-        result.append((new_key, new_meaning, word_type))
-    return result
+        if new_key[-1] == ' ':
+            new_key = new_key[:-1]
+        if new_meaning[0] == ' ':
+            new_meaning = new_meaning[1:]
+
+        partOfSpeech = get_word_type(new_key)
+        new_dictionary[partOfSpeech].append({"word": new_key, "degree": 0, "translation": new_meaning, "transcription": new_transcription})
+    return new_dictionary
 
 
-def get_word_type (new_key) -> str:
-    doc = nlp(new_key)
+def get_word_type(word: str) -> str:
+    doc = polishSpacyLibrary(word)
     word_type = doc[0].pos_
     word_type = word_type.lower()
 
-    if word_type == 'noun' or word_type == 'adv' or word_type == 'adj' or word_type == 'verb':
-        vari = 1
-    else:
+    if word_type != 'noun' and word_type != 'adv' and word_type != 'adj' and word_type != 'verb':
+        word_type = 'other'
+    
+    return word_type
+
+
+def get_word_type_en(word: str) -> str:
+    word = translate_to_english(word, "pl")
+    doc = englishSpacyLibrary(word)
+    word_type = doc[0].pos_
+    word_type = word_type.lower()
+
+    if word_type != 'noun' and word_type != 'adv' and word_type != 'adj' and word_type != 'verb':
         word_type = 'other'
 
     return word_type
+
+
+def translate_to_english(word, src_language):
+    translator = Translator()
+    translation = translator.translate(text=word, src=f"{src_language}", dest='en')
+    return translation.text
+
+
+# print(translate_to_english("piłka", "pl"))

@@ -13,6 +13,20 @@ import polls
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
+#зачем нам это
+class Poll:
+    def __init__(self, options, correct_option_id, question, is_anonymous):
+        self.options = options
+        self.correct_option_id = correct_option_id
+        self.question = question
+        self.is_anonymous = is_anonymous
+
+    def send(self, chat_id, bot):
+        poll_message= bot.send_poll(chat_id=chat_id, options=self.options,
+                      correct_option_id=self.correct_option_id, type='quiz',
+                      question=self.question, is_anonymous=self.is_anonymous)
+        return poll_message
+
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
@@ -34,11 +48,14 @@ def help_handler(message):
                  '"/stop_mailing" - to stop mailing\n'
                  '"/change_mailing_time" - to change mailing time\n'
                  '"/game" - to get a game\n')
+
 # '"/change_dict" - to change level of your dictionary\n'
+
 
 
 @bot.message_handler(commands=['whole_dict'])
 def whole_dict_handler(message):
+
     # t = time.time()
     # bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     # dictionary = db_interface.get_all_words() #change it ---------------------------------------------
@@ -54,6 +71,7 @@ def whole_dict_handler(message):
 
     # print(time.time() - t, "out")
     bot.send_message(chat_id=message.chat.id, text="Временно недоступно")
+
 
 
 # Add words from files to the dict
@@ -209,6 +227,7 @@ def change_mailing_time(message):
         bot.register_next_step_handler(message, change_mailing_time)
         return
 
+
     f = db_interface.started_mailing(message.chat.id)
     if f != 0:
         bot.send_message(message.chat.id, "Изменил время")
@@ -264,6 +283,7 @@ def game(message):
     while times > 0:
         times = times - 1
         poll = polls.create_poll()
+
 
         poll_message = poll.send(message.chat.id, bot)
         poll_message_id = poll_message.message_id

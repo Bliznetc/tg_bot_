@@ -240,6 +240,8 @@ def fix_the_word(user_id: int, set_word: list):
             cursor.execute(query, (content, Dictionary))
 
             connection.commit()
+    
+    return "Слова изменены"
 
             
             

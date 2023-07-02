@@ -335,7 +335,8 @@ def improve_word(message, arr):
         arr[i] = arr[i].lower()
         print(arr[i])
     bot.send_message(message.chat.id, f"слово - {arr[0]}, перевод - {arr[1]}, транскр - {arr[2]}, часть речи - {arr[3]}, словарь - {arr[4]}")
-    db_interface.fix_the_word(message.chat.id, arr)
+    text = db_interface.fix_the_word(message.chat.id, arr)
+    bot.send_message(message.chat.id, text)
 
 print(__name__)
 set_interval(check_send_quiz, 60)

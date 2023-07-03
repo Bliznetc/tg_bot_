@@ -13,20 +13,6 @@ import polls
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
-#зачем нам это
-class Poll:
-    def __init__(self, options, correct_option_id, question, is_anonymous):
-        self.options = options
-        self.correct_option_id = correct_option_id
-        self.question = question
-        self.is_anonymous = is_anonymous
-
-    def send(self, chat_id, bot):
-        poll_message= bot.send_poll(chat_id=chat_id, options=self.options,
-                      correct_option_id=self.correct_option_id, type='quiz',
-                      question=self.question, is_anonymous=self.is_anonymous)
-        return poll_message
-
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
@@ -34,7 +20,7 @@ def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
     reply_text = db_interface.userRegistration(
-        message.chat.id)  
+        message.chat.id)
     bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
@@ -47,15 +33,15 @@ def help_handler(message):
                  '"/start_mailing" - to start getting quizzes\n'
                  '"/stop_mailing" - to stop mailing\n'
                  '"/change_mailing_time" - to change mailing time\n'
+                 '"/improve_word" - secret\n'
                  '"/game" - to get a game\n')
+
 
 # '"/change_dict" - to change level of your dictionary\n'
 
 
-
 @bot.message_handler(commands=['whole_dict'])
 def whole_dict_handler(message):
-
     # t = time.time()
     # bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     # dictionary = db_interface.get_all_words() #change it ---------------------------------------------
@@ -71,7 +57,6 @@ def whole_dict_handler(message):
 
     # print(time.time() - t, "out")
     bot.send_message(chat_id=message.chat.id, text="Временно недоступно")
-
 
 
 # Add words from files to the dict
@@ -227,7 +212,6 @@ def change_mailing_time(message):
         bot.register_next_step_handler(message, change_mailing_time)
         return
 
-
     f = db_interface.started_mailing(message.chat.id)
     if f != 0:
         bot.send_message(message.chat.id, "Изменил время")
@@ -284,7 +268,6 @@ def game(message):
         times = times - 1
         poll = polls.create_poll()
 
-
         poll_message = poll.send(message.chat.id, bot)
         poll_message_id = poll_message.message_id
 
@@ -308,18 +291,23 @@ def game(message):
     bot.send_message(message.chat.id, f"Вы ответили правильно на {cnt_correct} вопросов из {t_times}")
 
 
-# Creates a game for users
+# Fixes the word
 @bot.message_handler(commands=['improve_word'])
 def improve_word_0(message):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
         bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
         return
-    bot.send_message(message.chat.id, "формат: слово,перевод,транскрипция,часть речи")
+    bot.send_message(message.chat.id, "формат: слово,перевод,транскрипция,часть речи (без пробелов!!)")
     bot.register_next_step_handler(message, improve_word_1)
 
 
+@bot.message_handler(content_types=['text'])
 def improve_word_1(message):
+    access = db_interface.get_user_access(message.chat.id)
+    if access != "admin":
+        bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
+        return
     arr = message.text.split(",")
     keyboard = types.ReplyKeyboardMarkup()
     dict_ids = db_interface.get_dict_ids()
@@ -333,15 +321,14 @@ def improve_word(message, arr):
     arr.append(message.text)
     for i in range(len(arr)):
         arr[i] = arr[i].lower()
-        print(arr[i])
-    bot.send_message(message.chat.id, f"слово - {arr[0]}, перевод - {arr[1]}, транскр - {arr[2]}, часть речи - {arr[3]}, словарь - {arr[4]}")
+
+    # bot.send_message(message.chat.id, f"слово - {arr[0]}, перевод - {arr[1] if len(arr) > 3 else x}, транскр - {arr[2] if len(arr) > 3 else x}, часть речи - {arr[3] if len(arr) > 3 else }, словарь - {}")
     text = db_interface.fix_the_word(message.chat.id, arr)
     bot.send_message(message.chat.id, text)
 
+
 print(__name__)
 set_interval(check_send_quiz, 60)
-
-
 
 if __name__ == '__main__':
     bot.polling()

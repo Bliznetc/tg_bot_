@@ -4,10 +4,10 @@ import db_interface
 
 # with open("Anton1.txt", 'r', encoding='utf-8') as file:
 #     file_content = file.read()
-with open("A1.txt", 'r', encoding='utf-8') as file:
-    file_content = file.read()
-#
-arr = file_content.split(";")
+# with open("A1.txt", 'r', encoding='utf-8') as file:
+#     file_content = file.read()
+# #
+# arr = file_content.split(";")
 # arr2 = file_content2.split("\n")
 # arr3 = []
 #
@@ -49,7 +49,7 @@ arr = file_content.split(";")
 #
 # # print(arr2)
 # # print(len(arr2))
-text = ";\n".join(arr)
+# text = ";\n".join(arr)
 # text2 = "\n".join(arr3)
 # with open("Anton_keys.txt", "w", encoding="utf-8") as file:
 #     file.write(text2)
@@ -57,6 +57,6 @@ text = ";\n".join(arr)
 #     file.write(text)
 #
 # # print(text)
-new_dictionary = processing.prepare_text(text)
-text_0 = db_interface.add_new_dictionary(new_dictionary, 'TEST_ALL')
+new_dictionary = processing.prepare_text("")
+text_0 = db_interface.add_new_dictionary(new_dictionary, 'TEST_TRASH')
 print(text_0)

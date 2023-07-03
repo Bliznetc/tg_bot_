@@ -25,7 +25,7 @@ print(time.time() - t, "takes to set up the connection")
 
 # Adding a new record to the Table Users
 
-def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict_id='TEST1'):
+def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict_id='TEST_A1'):
     with connection_pool.get_connection() as connection:
         # check if user is already in the database
         listOfUserIds = get_user_ids()
@@ -212,18 +212,48 @@ def fix_the_word(user_id: int, set_word: list):
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
             dict_id = get_user_dict_id(user_id=user_id)
-            word, translation, transcription, partOfSpeech, Dictionary = set_word
-            
+            word = translation = transcription = partOfSpeech = Dictionary = ""
+
+            if len(set_word) == 5:
+                word, translation, transcription, partOfSpeech, Dictionary = set_word
+            if len(set_word) == 2:
+                word, Dictionary = set_word
+            if len(set_word) == 3:
+                word, partOfSpeech, Dictionary = set_word
+
             # Удаляем
             query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (dict_id,))
 
+            f = 0
             dictionary = json.loads(cursor.fetchall()[0][0])
-            for i in range(len(dictionary[partOfSpeech])):
-                if dictionary[partOfSpeech][i]['word'] == word:
-                    del dictionary[partOfSpeech][i]
-                    break
-            
+            for cur_part in dictionary:
+                for i in range(len(dictionary[cur_part])):
+                    if dictionary[cur_part][i]['word'] == word:
+                        if translation == "":
+                            translation = dictionary[cur_part][i]['translation']
+                        if transcription == "":
+                            transcription = dictionary[cur_part][i]['transcription']
+                        if partOfSpeech == "":
+                            partOfSpeech = cur_part
+                        del dictionary[cur_part][i]
+                        f = 1
+                        break
+
+            if f == 0:
+                return "Такое слово не найдено"
+
+            part_to_num = {
+                "adj": 0,
+                "adv": 1,
+                "noun": 2,
+                "other": 4,
+                "verb": 3
+            }
+
+            if partOfSpeech not in part_to_num:
+                return "Такая часть речи не найдена"
+
             content = json.dumps(dictionary)
             query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
             cursor.execute(query, (content, dict_id))
@@ -235,6 +265,7 @@ def fix_the_word(user_id: int, set_word: list):
             dictionary = json.loads(cursor.fetchall()[0][0])
             dictionary[partOfSpeech].append({'word': word, 'degree': 0,'translation': translation, 'transcription': transcription})
 
+            print("Обновил словарь - " + word + " " + translation + " " + Dictionary)
             content = json.dumps(dictionary)
             query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
             cursor.execute(query, (content, Dictionary))

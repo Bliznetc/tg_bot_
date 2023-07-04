@@ -292,6 +292,11 @@ def game(message):
     t_times = times
     cnt_correct = 0
 
+    if times > 100:
+        bot.send_message(message.chat.id, "Мне кажется, вам не надо столько квизов. Выберите число меньше 100")
+        bot.register_next_step_handler(message, game)
+        return
+
     bot.send_message(message.chat.id, "На каждый вопрос у Вас будет 10 секунд")
     while times > 0:
         times = times - 1

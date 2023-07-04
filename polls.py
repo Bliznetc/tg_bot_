@@ -3,15 +3,6 @@
 import db_interface
 import random
 
-# It should be const all the time. It is to know the number in the list of words for each part
-part_to_num = {
-    "adj": 0,
-    "adv": 1,
-    "noun": 2,
-    "other": 4,
-    "verb": 3
-}
-
 num_to_part = {
     0: "adj",
     1: "adv",

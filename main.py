@@ -102,11 +102,8 @@ def send_quiz(MesOrNum, need_list=None):
     if need_list is None:
         need_list = []
 
-    if isinstance(MesOrNum, int):
-        chat_id = MesOrNum
-    else:
-        chat_id = MesOrNum.chat.id
-        need_list.append(chat_id)
+    if not isinstance(MesOrNum, int):
+        need_list.append(MesOrNum.chat.id)
 
     if len(need_list) == 0:
         return

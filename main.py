@@ -292,7 +292,7 @@ def game(message):
     t_times = times
     cnt_correct = 0
 
-    if times > 100:
+    if times > 100 or times <= 0:
         bot.send_message(message.chat.id, "Мне кажется, вам не надо столько квизов. Выберите число меньше 100")
         bot.register_next_step_handler(message, game)
         return

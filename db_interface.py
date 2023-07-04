@@ -25,7 +25,7 @@ print(time.time() - t, "takes to set up the connection")
 
 # Adding a new record to the Table Users
 
-def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict_id='TEST_A1'):
+def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict_id='TEST_ALL'):
     with connection_pool.get_connection() as connection:
         # check if user is already in the database
         listOfUserIds = get_user_ids()
@@ -208,23 +208,11 @@ def get_needed_users():
         return cur_list
 
 
-def fix_the_word(user_id: int, set_word: list):
+# Deletes a word from its dictionary
+def delete_word_from_dict (query, word, translation, transcription, partOfSpeech, dict_id) -> list:
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
-            dict_id = get_user_dict_id(user_id=user_id)
-            word = translation = transcription = partOfSpeech = Dictionary = ""
-
-            if len(set_word) == 5:
-                word, translation, transcription, partOfSpeech, Dictionary = set_word
-            if len(set_word) == 2:
-                word, Dictionary = set_word
-            if len(set_word) == 3:
-                word, partOfSpeech, Dictionary = set_word
-
-            # Удаляем
-            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (dict_id,))
-
             f = 0
             dictionary = json.loads(cursor.fetchall()[0][0])
             for cur_part in dictionary:
@@ -240,30 +228,33 @@ def fix_the_word(user_id: int, set_word: list):
                         f = 1
                         break
 
+            cur = [translation, transcription, partOfSpeech]
             if f == 0:
-                return "Такое слово не найдено"
+                return ["Такое слово не найдено"]
 
-            part_to_num = {
-                "adj": 0,
-                "adv": 1,
-                "noun": 2,
-                "other": 4,
-                "verb": 3
-            }
+            part_to_num = ["adj", "adv", "noun", "other", "verb"]
 
             if partOfSpeech not in part_to_num:
-                return "Такая часть речи не найдена"
+                return ["Такая часть речи не найдена"]
 
             content = json.dumps(dictionary)
             query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
             cursor.execute(query, (content, dict_id))
-            
-            # Добавляем
+
+            connection.commit()
+            return cur
+
+
+# Adds a word to new dictionary
+def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary) -> str:
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
             query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (Dictionary,))
 
             dictionary = json.loads(cursor.fetchall()[0][0])
-            dictionary[partOfSpeech].append({'word': word, 'degree': 0,'translation': translation, 'transcription': transcription})
+            dictionary[partOfSpeech].append(
+                {'word': word, 'degree': 0, 'translation': translation, 'transcription': transcription})
 
             print("Обновил словарь - " + word + " " + translation + " " + Dictionary)
             content = json.dumps(dictionary)
@@ -271,11 +262,36 @@ def fix_the_word(user_id: int, set_word: list):
             cursor.execute(query, (content, Dictionary))
 
             connection.commit()
-    
-    return "Функция выполнена успешно"
+            return "Сделяль"
 
-            
-            
+
+# Fixes bugs in the word
+def fix_the_word(user_id: int, set_word: list):
+    dict_id = get_user_dict_id(user_id=user_id)
+    word = translation = transcription = partOfSpeech = Dictionary = ""
+
+    if len(set_word) == 5:
+        word, translation, transcription, partOfSpeech, Dictionary = set_word
+    if len(set_word) == 2:
+        word, Dictionary = set_word
+    if len(set_word) == 3:
+        word, partOfSpeech, Dictionary = set_word
+
+    # Удаляем
+    query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
+    cur = delete_word_from_dict(query, word, translation, transcription, partOfSpeech, dict_id)
+    if len(cur) == 1:
+        return cur[0]
+
+    translation, transcription, partOfSpeech = cur
+
+    # Добавляем
+    text = add_word_to_dict(word, translation, transcription, partOfSpeech, Dictionary)
+
+    return text
+
+
+
 
 
 # не понятно, зачем

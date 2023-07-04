@@ -24,12 +24,10 @@ print(time.time() - t, "takes to set up the connection")
 
 
 # Adding a new record to the Table Users
-
 def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict_id='TEST_ALL'):
     with connection_pool.get_connection() as connection:
         # check if user is already in the database
-        listOfUserIds = get_user_ids()
-        if user_id in listOfUserIds:
+        if check_user_in(user_id):
             text = 'Вы уже зарегестрированы'
         else:  # adding user to the database
             with connection.cursor() as cursor:
@@ -38,6 +36,14 @@ def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict
                 connection.commit()
                 text = 'Добро пожаловать!\nВоспользуйтесь меню или командой /help для того, чтобы просмотреть список доступных команд'
     return text
+
+
+# checks if user is well-known
+def check_user_in(user_id: int):
+    listOfUserIds = get_user_ids()
+    if user_id in listOfUserIds:
+        return 1
+    return 0
 
 
 # returns a dictionary by user id, will be used in whole_dict_handler
@@ -121,6 +127,7 @@ def get_user_dict_id(user_id: int):
             resultOfQuery = cursor.fetchall()
             connection.commit()
     return resultOfQuery[0][0]
+
 
 
 # returns list of users' id

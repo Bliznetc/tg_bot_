@@ -209,7 +209,7 @@ def get_needed_users():
             if (now_allm - sent_allm) % period == 0:
                 cur_list.append(a[0])
 
-        print(cur_list)
+        # print(cur_list)
         cursor.close()
         return cur_list
 

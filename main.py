@@ -122,7 +122,7 @@ def send_quiz(MesOrNum, need_list=None):
         polls_by_dict_id[dict_id] = polls.create_poll(dict_id)
         polls_by_dict_id[dict_id].send(user_id, bot)
 
-    print("Квизы успещно отправлены")
+    # print("Квизы успещно отправлены")
 
 
 # function to send quizzes to the users
@@ -133,7 +133,7 @@ def check_send_quiz():
 
 # checks if there are users asking for quiz
 def set_interval(func, sec):
-    print("Я вызвал set_interval")
+    # print("Я вызвал set_interval")
 
     def func_wrapper():
         set_interval(func, sec)

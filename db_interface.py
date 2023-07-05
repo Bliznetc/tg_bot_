@@ -228,9 +228,9 @@ def delete_word_from_dict (query, word, translation, transcription, partOfSpeech
                 for i in range(len(dictionary[cur_part])):
                     if dictionary[cur_part][i]['word'] == word:
                         if translation == "":
-                            translation = dictionary[cur_part][i]['translation']
+                            translation = dictionary[cur_part][i]['trsl']
                         if transcription == "":
-                            transcription = dictionary[cur_part][i]['transcription']
+                            transcription = dictionary[cur_part][i]['trsc']
                         if partOfSpeech == "":
                             partOfSpeech = cur_part
                         del dictionary[cur_part][i]
@@ -262,7 +262,7 @@ def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary
             cursor.execute(query, (Dictionary,))
 
             dictionary = json.loads(cursor.fetchall()[0][0])
-            dictionary[partOfSpeech].append({'word': word, 'translation': translation, 'transcription': transcription})
+            dictionary[partOfSpeech].append({'word': word, 'trsl': translation, 'trsc': transcription})
 
             print("Обновил словарь - " + word + " " + translation + " " + Dictionary)
             content = json.dumps(dictionary)

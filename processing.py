@@ -27,7 +27,7 @@ def prepare_text(text: str) -> dict:
             new_meaning = new_meaning[1:]
 
         partOfSpeech = get_word_type(new_key)
-        new_dictionary[partOfSpeech].append({"word": new_key, "translation": new_meaning, "transcription": new_transcription})
+        new_dictionary[partOfSpeech].append({"word": new_key, "trsl": new_meaning, "trsc": new_transcription})
     return new_dictionary
 
 

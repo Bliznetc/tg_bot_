@@ -38,7 +38,5 @@ def transform(string: str):
     print('----------------------------------------------')
     return string
 
-
-formating('TEST_B1')
         
 

@@ -18,7 +18,7 @@ def prepare_text(text: str) -> dict:
     for x in arr:
         if x.find('-') == -1:
             continue
-        new_key, new_meaning, new_transcription = x.split('-', 2)
+        new_key, new_meaning, new_trsc = x.split('-', 2)
         new_key = new_key.replace('\n', '')
         new_key = new_key.lower()
         if new_key[-1] == ' ':
@@ -27,7 +27,7 @@ def prepare_text(text: str) -> dict:
             new_meaning = new_meaning[1:]
 
         partOfSpeech = get_word_type(new_key)
-        new_dictionary[partOfSpeech].append({"word": new_key, "degree": 0, "translation": new_meaning, "transcription": new_transcription})
+        new_dictionary[partOfSpeech].append({"word": new_key, "trsl": new_meaning, "trsc": new_trsc})
     return new_dictionary
 
 
@@ -56,8 +56,8 @@ def get_word_type_en(word: str) -> str:
 
 def translate_to_english(word, src_language):
     translator = Translator()
-    translation = translator.translate(text=word, src=f"{src_language}", dest='en')
-    return translation.text
+    trsl = translator.translate(text=word, src=f"{src_language}", dest='en')
+    return trsl.text
 
 
 # print(translate_to_english("piłka", "pl"))

@@ -54,7 +54,7 @@ def whole_dict_handler(message):
 
     # with open(file_path, "w", encoding="utf-8") as file:
     #     for word in dictionary:
-    #         file.write(f"{word['word']}-{word['translation']};\n")
+    #         file.write(f"{word['word']}-{word['trsl']};\n")
 
     # bot.send_document(chat_id=message.chat.id, document=open(file_path, "rb"))
     # os.remove(file_path)

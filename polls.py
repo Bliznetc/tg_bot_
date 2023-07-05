@@ -44,10 +44,10 @@ def create_poll(dict_id='TEST_ALL'):
     word_number, answer_options = generate_quiz(dict_id)
     for answer in answer_options:
         answer['word'] = answer['word'].capitalize()
-        answer['translation'] = answer['translation'].capitalize()
+        answer['trsl'] = answer['trsl'].capitalize()
 
-    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']} [{answer_options[word_number]['transcription']}]?\n"
-    possible_answers = [answer['translation'] for answer in answer_options]
+    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']} [{answer_options[word_number]['trs']}]?\n"
+    possible_answers = [answer['trsl'] for answer in answer_options]
 
     poll = Poll(possible_answers, word_number, quiz_text, True)
     return poll

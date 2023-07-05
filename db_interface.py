@@ -129,7 +129,6 @@ def get_user_dict_id(user_id: int):
     return resultOfQuery[0][0]
 
 
-
 # returns list of users' id
 def get_user_ids():
     with connection_pool.get_connection() as connection:
@@ -216,26 +215,27 @@ def get_needed_users():
 
 
 # Deletes a word from its dictionary
-def delete_word_from_dict (query, word, translation, transcription, partOfSpeech, dict_id) -> list:
+def delete_word_from_dict (word, trsl, trsc, partOfSpeech, dict_id) -> list:
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
+            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (dict_id,))
             f = 0
             dictionary = json.loads(cursor.fetchall()[0][0])
             for cur_part in dictionary:
                 for i in range(len(dictionary[cur_part])):
                     if dictionary[cur_part][i]['word'] == word:
-                        if translation == "":
-                            translation = dictionary[cur_part][i]['translation']
-                        if transcription == "":
-                            transcription = dictionary[cur_part][i]['transcription']
+                        if trsl == "":
+                            trsl = dictionary[cur_part][i]['trsl']
+                        if trsc == "":
+                            trsc = dictionary[cur_part][i]['trsc']
                         if partOfSpeech == "":
                             partOfSpeech = cur_part
                         del dictionary[cur_part][i]
                         f = 1
                         break
 
-            cur = [translation, transcription, partOfSpeech]
+            cur = [trsl, trsc, partOfSpeech]
             if f == 0:
                 return ["Такое слово не найдено"]
 
@@ -253,7 +253,7 @@ def delete_word_from_dict (query, word, translation, transcription, partOfSpeech
 
 
 # Adds a word to new dictionary
-def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary) -> str:
+def add_word_to_dict (word, trsl, trsc, partOfSpeech, Dictionary) -> str:
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
             query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
@@ -261,9 +261,9 @@ def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary
 
             dictionary = json.loads(cursor.fetchall()[0][0])
             dictionary[partOfSpeech].append(
-                {'word': word, 'degree': 0, 'translation': translation, 'transcription': transcription})
+                {'word': word, 'trsl': trsl, 'trsc': trsc})
 
-            print("Обновил словарь - " + word + " " + translation + " " + Dictionary)
+            print("Обновил словарь - " + word + " " + trsl + " " + Dictionary)
             content = json.dumps(dictionary)
             query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
             cursor.execute(query, (content, Dictionary))
@@ -275,27 +275,26 @@ def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary
 # Fixes bugs in the word
 def fix_the_word(user_id: int, set_word: list):
     dict_id = get_user_dict_id(user_id=user_id)
-    word = translation = transcription = partOfSpeech = Dictionary = ""
+    word = trsl = trsc = partOfSpeech = Dictionary = ""
 
     if len(set_word) == 5:
-        word, translation, transcription, partOfSpeech, Dictionary = set_word
+        word, trsl, trsc, partOfSpeech, Dictionary = set_word
     if len(set_word) == 2:
         word, Dictionary = set_word
     if len(set_word) == 3:
         word, partOfSpeech, Dictionary = set_word
 
     # Удаляем
-    query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
-    cur = delete_word_from_dict(query, word, translation, transcription, partOfSpeech, dict_id)
+    cur = delete_word_from_dict(word, trsl, trsc, partOfSpeech, dict_id)
     if len(cur) == 1:
         return cur[0]
 
-    translation, transcription, partOfSpeech = cur
+    trsl, trsc, partOfSpeech = cur
 
     # Добавляем
-    text = add_word_to_dict(word, translation, transcription, partOfSpeech, Dictionary)
+    # text = add_word_to_dict(word, trsl, transcription, partOfSpeech, Dictionary)
 
-    return text
+    return "text"
 
 
 

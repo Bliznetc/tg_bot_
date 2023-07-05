@@ -18,7 +18,6 @@ def prepare_text(text: str) -> dict:
     for x in arr:
         if x.find('-') == -1:
             continue
-        print(x)
         new_key, new_meaning, new_transcription = x.split('-', 2)
         new_key = new_key.replace('\n', '')
         new_key = new_key.lower()

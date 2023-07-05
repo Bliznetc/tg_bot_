@@ -129,7 +129,6 @@ def get_user_dict_id(user_id: int):
     return resultOfQuery[0][0]
 
 
-
 # returns list of users' id
 def get_user_ids():
     with connection_pool.get_connection() as connection:
@@ -146,98 +145,97 @@ def get_user_ids():
 # returns value of Mailing
 def started_mailing(user_id: int):
     with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = f"SELECT Mailing FROM Users WHERE user_id = {user_id}"
-            cursor.execute(query)
-    return cursor.fetchall()[0][0]
-    
-###
-def update_content(dict_id: str, new_content: dict):
-    with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            content = json.dumps(new_content, ensure_ascii=False, indent=4)
-            query = f"UPDATE Dictionaries SET content = '{content}' WHERE dict_id = '{dict_id}'"
-            cursor.execute(query)
+        cursor = connection.cursor()
 
-            connection.commit()
-    print(f'Content updated successfully')
-###
+        query = f"SELECT Mailing FROM Users WHERE user_id = {user_id}"
+        cursor.execute(query)
+
+        cur_json = cursor.fetchall()
+        cursor.close()
+        return cur_json[0][0]
+
+
 # updates value of Mailing
 def update_mailing(user_id: int, new_value):
     with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {user_id}"
-            cursor.execute(query)
+        cursor = connection.cursor()
 
-            connection.commit()
-            print("Изменил значение Mailing")
-        
+        query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {user_id}"
+        cursor.execute(query)
+
+        connection.commit()
+        print("Изменил значение Mailing")
+        cursor.close()
 
 
 # updates dict_id of a user
 def update_dict_id(user_id: int, new_value: str):
     with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor: 
-            print(new_value, user_id)
-            query = "UPDATE Users SET dict_id = %s WHERE user_id = %s"
-            cursor.execute(query, (new_value, user_id))
+        cursor = connection.cursor()
 
-            connection.commit()
-            print("Изменил значение dict_id")
-        
+        print(new_value, user_id)
+        query = "UPDATE Users SET dict_id = %s WHERE user_id = %s"
+        cursor.execute(query, (new_value, user_id))
+
+        connection.commit()
+        print("Изменил значение dict_id")
+        cursor.close()
 
 
 # Returns list of users, whom we need to send a quiz to
 def get_needed_users():
     with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
-            cursor.execute(query)
+        cursor = connection.cursor()
 
-            result = cursor.fetchall()
-            cur_list = []
-            for a in result:
-                cur_time = a[1]
-                period = a[2]
-                sent_h = cur_time.seconds // 3600
-                sent_m = (cur_time.seconds // 60) % 60
+        query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
+        cursor.execute(query)
 
-                now = datetime.now()
-                now_h = now.hour
-                now_m = now.minute
+        result = cursor.fetchall()
+        cur_list = []
+        for a in result:
+            cur_time = a[1]
+            period = a[2]
+            sent_h = cur_time.seconds // 3600
+            sent_m = (cur_time.seconds // 60) % 60
 
-                sent_allm = sent_h * 60 + sent_m
-                now_allm = now_h * 60 + now_m
-                if now_allm < sent_allm:
-                    now_allm += 1440
-                if (now_allm - sent_allm) % period == 0:
-                    cur_list.append(a[0])
+            now = datetime.now()
+            now_h = now.hour
+            now_m = now.minute
 
-            print(cur_list)
-    return cur_list
+            sent_allm = sent_h * 60 + sent_m
+            now_allm = now_h * 60 + now_m
+            if now_allm < sent_allm:
+                now_allm += 1440
+            if (now_allm - sent_allm) % period == 0:
+                cur_list.append(a[0])
+
+        print(cur_list)
+        cursor.close()
+        return cur_list
 
 
 # Deletes a word from its dictionary
-def delete_word_from_dict (query, word, translation, transcription, partOfSpeech, dict_id) -> list:
+def delete_word_from_dict (word, trsl, trsc, partOfSpeech, dict_id) -> list:
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
+            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (dict_id,))
             f = 0
             dictionary = json.loads(cursor.fetchall()[0][0])
             for cur_part in dictionary:
                 for i in range(len(dictionary[cur_part])):
                     if dictionary[cur_part][i]['word'] == word:
-                        if translation == "":
-                            translation = dictionary[cur_part][i]['trsl']
-                        if transcription == "":
-                            transcription = dictionary[cur_part][i]['trsc']
+                        if trsl == "":
+                            trsl = dictionary[cur_part][i]['trsl']
+                        if trsc == "":
+                            trsc = dictionary[cur_part][i]['trsc']
                         if partOfSpeech == "":
                             partOfSpeech = cur_part
                         del dictionary[cur_part][i]
                         f = 1
                         break
 
-            cur = [translation, transcription, partOfSpeech]
+            cur = [trsl, trsc, partOfSpeech]
             if f == 0:
                 return ["Такое слово не найдено"]
 
@@ -255,16 +253,17 @@ def delete_word_from_dict (query, word, translation, transcription, partOfSpeech
 
 
 # Adds a word to new dictionary
-def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary) -> str:
+def add_word_to_dict (word, trsl, trsc, partOfSpeech, Dictionary) -> str:
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
             query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (Dictionary,))
 
             dictionary = json.loads(cursor.fetchall()[0][0])
-            dictionary[partOfSpeech].append({'word': word, 'trsl': translation, 'trsc': transcription})
+            dictionary[partOfSpeech].append(
+                {'word': word, 'trsl': trsl, 'trsc': trsc})
 
-            print("Обновил словарь - " + word + " " + translation + " " + Dictionary)
+            print("Обновил словарь - " + word + " " + trsl + " " + Dictionary)
             content = json.dumps(dictionary)
             query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
             cursor.execute(query, (content, Dictionary))
@@ -276,29 +275,39 @@ def add_word_to_dict (word, translation, transcription, partOfSpeech, Dictionary
 # Fixes bugs in the word
 def fix_the_word(user_id: int, set_word: list):
     dict_id = get_user_dict_id(user_id=user_id)
-    word = translation = transcription = partOfSpeech = Dictionary = ""
+    word = trsl = trsc = partOfSpeech = Dictionary = ""
 
     if len(set_word) == 5:
-        word, translation, transcription, partOfSpeech, Dictionary = set_word
+        word, trsl, trsc, partOfSpeech, Dictionary = set_word
     if len(set_word) == 2:
         word, Dictionary = set_word
     if len(set_word) == 3:
         word, partOfSpeech, Dictionary = set_word
 
     # Удаляем
-    query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
-    cur = delete_word_from_dict(query, word, translation, transcription, partOfSpeech, dict_id)
+    cur = delete_word_from_dict(word, trsl, trsc, partOfSpeech, dict_id)
     if len(cur) == 1:
         return cur[0]
 
-    translation, transcription, partOfSpeech = cur
+    trsl, trsc, partOfSpeech = cur
 
     # Добавляем
-    text = add_word_to_dict(word, translation, transcription, partOfSpeech, Dictionary)
+    text = add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary)
 
     return text
 
 
 
 
+
+# не понятно, зачем
+# менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Проверка на уникальность
+# def check_in (new_key, dictionary):
+#     f = 1
+#     for word in dictionary:
+#         if word['word'] == new_key:
+#             f = 0
+#             break
+#     return f
 

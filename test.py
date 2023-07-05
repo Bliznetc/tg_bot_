@@ -10,6 +10,7 @@ import db_interface
 import re
 import codecs
 
+
 def formating(dict_id):
     content = db_interface.get_words_by_dict_id(dict_id)
 
@@ -23,20 +24,22 @@ def formating(dict_id):
 
     print("probitie")
 
+
 def check_substring(s):
     match = re.search(r'u0\w{3}', s)
     if match:
         return (match.start(), match.group())
     return -1
 
+
 def transform(string: str):
     while check_substring(string) != -1:
         index, letter = check_substring(string)
         print(index, letter)
-        string = string[:index] + codecs.decode(f"\\{letter}", "unicode_escape") + string[index+5:]
+        string = string[:index] + codecs.decode(f"\\{letter}", "unicode_escape") + string[index + 5:]
         print(string)
     print('----------------------------------------------')
     return string
 
-        
+
 

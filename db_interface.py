@@ -302,14 +302,3 @@ def fix_the_word(user_id: int, set_word: list):
 
 
 
-# не понятно, зачем
-# менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Проверка на уникальность
-# def check_in (new_key, dictionary):
-#     f = 1
-#     for word in dictionary:
-#         if word['word'] == new_key:
-#             f = 0
-#             break
-#     return f
-

@@ -3,15 +3,6 @@
 import db_interface
 import random
 
-# It should be const all the time. It is to know the number in the list of words for each part
-part_to_num = {
-    "adj": 0,
-    "adv": 1,
-    "noun": 2,
-    "other": 4,
-    "verb": 3
-}
-
 num_to_part = {
     0: "adj",
     1: "adv",
@@ -39,7 +30,7 @@ class Poll:
 
 
 # generates quiz when user types "/quiz"
-def generate_quiz(dict_id='TEST'):
+def generate_quiz(dict_id='TEST_ALL'):
     dictionary = db_interface.get_words_by_dict_id(dict_id)
     part_number = random.randint(0, 4)
 
@@ -49,16 +40,16 @@ def generate_quiz(dict_id='TEST'):
 
 
 # Creates a poll
-def create_poll(dict_id='TEST'):
+def create_poll(dict_id='TEST_ALL'):
     word_number, answer_options = generate_quiz(dict_id)
     for answer in answer_options:
         answer['word'] = answer['word'].capitalize()
         answer['translation'] = answer['translation'].capitalize()
 
-    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']}?\n"
+    quiz_text = f"Как переводится слово: {answer_options[word_number]['word']} [{answer_options[word_number]['transcription']}]?\n"
     possible_answers = [answer['translation'] for answer in answer_options]
 
-    poll = Poll(possible_answers, word_number, quiz_text, False)
+    poll = Poll(possible_answers, word_number, quiz_text, True)
     return poll
 
 

@@ -11,7 +11,7 @@ import db_interface
 import polls
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
+bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 
 # Define a function to handle the /start command
@@ -35,7 +35,8 @@ def help_handler(message):
                      '"/stop_mailing" - to stop mailing\n'
                      '"/change_mailing_time" - to change mailing time\n'
                      '"/improve_word" - secret\n'
-                     '"/game" - to get a game\n')
+                     '"/game" - to get a game\n'
+                     '"/change_dict" - to change level of your dictionary')
     else:
         bot.send_message(message.chat.id, "Нажмите /start")
 
@@ -65,35 +66,35 @@ def whole_dict_handler(message):
 
 
 # Add words from files to the dict
-# @bot.message_handler(content_types=['document'])
-# def add_dictionary_from_file(message):
-#     if db_interface.get_user_access(message.chat.id) == 'user':
-#         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
-#     else:
-#         file_info = message.document
-#         file_id = file_info.file_id
-#         file_name = file_info.file_name
-#
-#         # Запрос файла с использованием его file_id
-#         file_info = bot.get_file(file_id)
-#         downloaded_file = bot.download_file(file_info.file_path)
-#
-#         # Сохранение файла локально
-#         with open(file_name, 'wb') as new_file:
-#             new_file.write(downloaded_file)
-#
-#         # Чтение содержимого файла
-#         with open(file_name, 'r', encoding='utf-8') as file:
-#             file_content = file.read()
-#
-#         os.remove(file_name)
-#
-#         bot.send_message(message.chat.id, "Добавляю...")
-#
-#         new_dictionary = pr.prepare_text(file_content)
-#         text = db_interface.add_new_dictionary(new_dictionary, 'TEST')
-#
-#         bot.reply_to(message, text)
+@bot.message_handler(content_types=['document'])
+def add_dictionary_from_file(message):
+    if db_interface.get_user_access(message.chat.id) == 'user':
+        bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
+    else:
+        file_info = message.document
+        file_id = file_info.file_id
+        file_name = file_info.file_name
+
+        # Запрос файла с использованием его file_id
+        file_info = bot.get_file(file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+
+        # Сохранение файла локально
+        with open(file_name, 'wb') as new_file:
+            new_file.write(downloaded_file)
+
+        # Чтение содержимого файла
+        with open(file_name, 'r', encoding='utf-8') as file:
+            file_content = file.read()
+
+        os.remove(file_name)
+
+        bot.send_message(message.chat.id, "Добавляю...")
+
+        new_dictionary = pr.prepare_text(file_content)
+        text = db_interface.add_new_dictionary(new_dictionary, 'TEST')
+
+        bot.reply_to(message, text)
 
 
 # sends quiz

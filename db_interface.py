@@ -292,9 +292,9 @@ def fix_the_word(user_id: int, set_word: list):
     trsl, trsc, partOfSpeech = cur
 
     # Добавляем
-    # text = add_word_to_dict(word, trsl, transcription, partOfSpeech, Dictionary)
+    text = add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary)
 
-    return "text"
+    return text
 
 
 

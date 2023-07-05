@@ -139,73 +139,75 @@ def get_user_ids():
 # returns value of Mailing
 def started_mailing(user_id: int):
     with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
+        with connection.cursor() as cursor:
+            query = f"SELECT Mailing FROM Users WHERE user_id = {user_id}"
+            cursor.execute(query)
+    return cursor.fetchall()[0][0]
+    
+###
+def update_content(dict_id: str, new_content: dict):
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            content = json.dumps(new_content, ensure_ascii=False, indent=4)
+            query = f"UPDATE Dictionaries SET content = '{content}' WHERE dict_id = '{dict_id}'"
+            cursor.execute(query)
 
-        query = f"SELECT Mailing FROM Users WHERE user_id = {user_id}"
-        cursor.execute(query)
-
-        cur_json = cursor.fetchall()
-        cursor.close()
-        return cur_json[0][0]
-
-
+            connection.commit()
+    print(f'Content updated successfully')
+###
 # updates value of Mailing
 def update_mailing(user_id: int, new_value):
     with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
+        with connection.cursor() as cursor:
+            query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {user_id}"
+            cursor.execute(query)
 
-        query = f"UPDATE Users SET Mailing = {int(new_value)}, sent_time = CURRENT_TIME() WHERE user_id = {user_id}"
-        cursor.execute(query)
-
-        connection.commit()
-        print("Изменил значение Mailing")
-        cursor.close()
+            connection.commit()
+            print("Изменил значение Mailing")
+        
 
 
 # updates dict_id of a user
 def update_dict_id(user_id: int, new_value: str):
     with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
+        with connection.cursor() as cursor: 
+            print(new_value, user_id)
+            query = "UPDATE Users SET dict_id = %s WHERE user_id = %s"
+            cursor.execute(query, (new_value, user_id))
 
-        print(new_value, user_id)
-        query = "UPDATE Users SET dict_id = %s WHERE user_id = %s"
-        cursor.execute(query, (new_value, user_id))
-
-        connection.commit()
-        print("Изменил значение dict_id")
-        cursor.close()
+            connection.commit()
+            print("Изменил значение dict_id")
+        
 
 
 # Returns list of users, whom we need to send a quiz to
 def get_needed_users():
     with connection_pool.get_connection() as connection:
-        cursor = connection.cursor()
+        with connection.cursor() as cursor:
+            query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
+            cursor.execute(query)
 
-        query = f"SELECT user_id, sent_time, Mailing FROM Users WHERE Mailing != 0"
-        cursor.execute(query)
+            result = cursor.fetchall()
+            cur_list = []
+            for a in result:
+                cur_time = a[1]
+                period = a[2]
+                sent_h = cur_time.seconds // 3600
+                sent_m = (cur_time.seconds // 60) % 60
 
-        result = cursor.fetchall()
-        cur_list = []
-        for a in result:
-            cur_time = a[1]
-            period = a[2]
-            sent_h = cur_time.seconds // 3600
-            sent_m = (cur_time.seconds // 60) % 60
+                now = datetime.now()
+                now_h = now.hour
+                now_m = now.minute
 
-            now = datetime.now()
-            now_h = now.hour
-            now_m = now.minute
+                sent_allm = sent_h * 60 + sent_m
+                now_allm = now_h * 60 + now_m
+                if now_allm < sent_allm:
+                    now_allm += 1440
+                if (now_allm - sent_allm) % period == 0:
+                    cur_list.append(a[0])
 
-            sent_allm = sent_h * 60 + sent_m
-            now_allm = now_h * 60 + now_m
-            if now_allm < sent_allm:
-                now_allm += 1440
-            if (now_allm - sent_allm) % period == 0:
-                cur_list.append(a[0])
-
-        print(cur_list)
-        cursor.close()
-        return cur_list
+            print(cur_list)
+    return cur_list
 
 
 def fix_the_word(user_id: int, set_word: list):
@@ -263,7 +265,7 @@ def fix_the_word(user_id: int, set_word: list):
             cursor.execute(query, (Dictionary,))
 
             dictionary = json.loads(cursor.fetchall()[0][0])
-            dictionary[partOfSpeech].append({'word': word, 'degree': 0,'translation': translation, 'transcription': transcription})
+            dictionary[partOfSpeech].append({'word': word, 'translation': translation, 'transcription': transcription})
 
             print("Обновил словарь - " + word + " " + translation + " " + Dictionary)
             content = json.dumps(dictionary)

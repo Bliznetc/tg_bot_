@@ -24,7 +24,7 @@ print(time.time() - t, "takes to set up the connection")
 
 
 # Adding a new record to the Table Users
-def userRegistration(user_id: int, access: str = 'user', mailing: bool = 0, dict_id='TEST_ALL'):
+def userRegistration(user_id: int, access: str = 'user', mailing: int = 0, dict_id='TEST_ALL'):
     with connection_pool.get_connection() as connection:
         # check if user is already in the database
         if check_user_in(user_id):
@@ -209,7 +209,7 @@ def get_needed_users():
             if (now_allm - sent_allm) % period == 0:
                 cur_list.append(a[0])
 
-        # print(cur_list)
+        print(cur_list)
         cursor.close()
         return cur_list
 

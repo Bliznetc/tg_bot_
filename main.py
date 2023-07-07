@@ -11,7 +11,7 @@ import db_interface
 import polls
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 
 # Define a function to handle the /start command
@@ -101,6 +101,9 @@ def send_quiz(MesOrNum, need_list=None):
 
     if not isinstance(MesOrNum, int):
         need_list.append(MesOrNum.chat.id)
+    elif MesOrNum != 0:
+        need_list.append(MesOrNum)
+
 
     if not db_interface.check_user_in(need_list[0]):
         bot.send_message(need_list[0], "Нажмите /start")
@@ -237,17 +240,32 @@ def change_dict(message):
     dict_ids = db_interface.get_dict_ids()
     for dict_id in dict_ids:
         keyboard.row(dict_id)
-    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.send_message(message.chat.id, "Перед изменением словаря Вам будут даны несколько квизов, чтобы примерно "
+                                      "понимать, какой уровень слов в словаре. Выберите словарь", reply_markup=keyboard)
     bot.register_next_step_handler(message, handle_buttons, dict_ids)
 
 
 def handle_buttons(message, dict_ids):
     chosen_option = message.text
-    if chosen_option in dict_ids:
-        db_interface.update_dict_id(message.chat.id, chosen_option)
-        bot.send_message(message.chat.id, "Успешно изменил словарь", reply_markup=ReplyKeyboardRemove())
-    else:
+    if chosen_option not in dict_ids:
         bot.send_message(message.chat.id, "Такой опции не было o_0", reply_markup=ReplyKeyboardRemove())
+        return
+
+    for i in range(3):
+        send_quiz(message.chat.id)
+
+    bot.send_message(message.chat.id, "Если вас устраивает словарь, нажмите /yes, иначе выберите другой словарь")
+    bot.register_next_step_handler(message, update_dict_in_bd, dict_ids, chosen_option)
+
+
+def update_dict_in_bd(message, dict_ids, chosen_option):
+    cur_text = message.text
+    if cur_text != "/yes":
+        handle_buttons(message, dict_ids)
+        return
+
+    bot.send_message(message.chat.id, "Успешно изменил словарь", reply_markup=ReplyKeyboardRemove())
+    db_interface.update_dict_id(message.chat.id, chosen_option)
 
 
 # Creates a game for users

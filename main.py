@@ -11,7 +11,7 @@ import db_interface
 import polls
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
+bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 
 # Define a function to handle the /start command
@@ -118,6 +118,12 @@ def send_quiz(MesOrNum, need_list=None):
 
         polls_by_dict_id[dict_id] = polls.create_poll(dict_id)
         polls_by_dict_id[dict_id].send(user_id, bot)
+
+
+# sends quiz with specific dict_id
+def send_quiz_with_dict_id(dict_id, chat_id):
+    poll = polls.create_poll(dict_id)
+    poll.send(chat_id, bot)
 
 
 # function to send quizzes to the users
@@ -252,7 +258,7 @@ def handle_buttons(message, dict_ids):
         return
 
     for i in range(3):
-        send_quiz(message.chat.id)
+        send_quiz_with_dict_id(chosen_option, message.chat.id)
 
     bot.send_message(message.chat.id, "Если вас устраивает словарь, нажмите /yes, иначе выберите другой словарь")
     bot.register_next_step_handler(message, update_dict_in_bd, dict_ids, chosen_option)

@@ -155,56 +155,6 @@ def send_change_dict(MesOrNum, need_list=None):
         bot.send_message(user_id, f"{word}-{trsl}-{trsc}")
 
 
-@bot.message_handler(content_types=['text'])
-def is_reply_to_bot_message(message):
-    if message.reply_to_message is not None:
-        if message.reply_to_message.content_type == 'text':
-            reply_process_text(message)
-        elif message.reply_to_message.content_type == 'poll':
-            reply_process_poll(message)
-    else:
-        improve_word_1(message)
-
-
-# здесь надо обработать ответ на text
-def reply_process_text (message):
-    word_text = message.reply_to_message.text
-    partOfSpeech = message.text
-    if word_text.count('-') != 2:
-        bot.send_message(message.chat.id, "Видимо, Вы ответили не на нужное сообщение. Попробуйте /improve_word")
-        return
-    arr = [word_text.split("-")[0], partOfSpeech]
-    keyboard = types.ReplyKeyboardMarkup()
-    dict_ids = db_interface.get_dict_ids()
-    for dict_id in dict_ids:
-        keyboard.row(dict_id)
-    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
-    bot.register_next_step_handler(message, improve_word, arr)
-
-
-# здесь надо обработать ответ на poll
-def reply_process_poll (message):
-    print(message.reply_to_message)
-    poll = message.reply_to_message.poll
-    quest = poll.question
-
-    # extracting the word
-    quest = quest.split(":")[1]
-    quest = quest.split("[")[0]
-    position = 0
-    quest = quest[:position] + quest[position + 1:]
-    position = len(quest) - 1
-    quest = quest[:position] + quest[position + 1:]
-
-    arr = [quest, message.text]
-    keyboard = types.ReplyKeyboardMarkup()
-    dict_ids = db_interface.get_dict_ids()
-    for dict_id in dict_ids:
-        keyboard.row(dict_id)
-    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
-    bot.register_next_step_handler(message, improve_word, arr)
-
-
 # function to send quizzes to the users
 def check_send_quiz():
     need_list = db_interface.get_needed_users()
@@ -453,6 +403,56 @@ def improve_word(message, arr):
 
     text = db_interface.fix_the_word(message.chat.id, arr)
     bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
+
+
+@bot.message_handler(content_types=['text'])
+def is_reply_to_bot_message(message):
+    if message.reply_to_message is not None:
+        if message.reply_to_message.content_type == 'text':
+            reply_process_text(message)
+        elif message.reply_to_message.content_type == 'poll':
+            reply_process_poll(message)
+    else:
+        improve_word_1(message)
+
+
+# здесь надо обработать ответ на text
+def reply_process_text (message):
+    word_text = message.reply_to_message.text
+    partOfSpeech = message.text
+    if word_text.count('-') != 2:
+        bot.send_message(message.chat.id, "Видимо, Вы ответили не на нужное сообщение. Попробуйте /improve_word")
+        return
+    arr = [word_text.split("-")[0], partOfSpeech]
+    keyboard = types.ReplyKeyboardMarkup()
+    dict_ids = db_interface.get_dict_ids()
+    for dict_id in dict_ids:
+        keyboard.row(dict_id)
+    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.register_next_step_handler(message, improve_word, arr)
+
+
+# здесь надо обработать ответ на poll
+def reply_process_poll (message):
+    print(message.reply_to_message)
+    poll = message.reply_to_message.poll
+    quest = poll.question
+
+    # extracting the word
+    quest = quest.split(":")[1]
+    quest = quest.split("[")[0]
+    position = 0
+    quest = quest[:position] + quest[position + 1:]
+    position = len(quest) - 1
+    quest = quest[:position] + quest[position + 1:]
+
+    arr = [quest, message.text]
+    keyboard = types.ReplyKeyboardMarkup()
+    dict_ids = db_interface.get_dict_ids()
+    for dict_id in dict_ids:
+        keyboard.row(dict_id)
+    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.register_next_step_handler(message, improve_word, arr)
 
 
 print(__name__)

@@ -195,6 +195,10 @@ def get_needed_users():
         for a in result:
             cur_time = a[1]
             period = a[2]
+
+            if cur_time is None:
+                continue
+
             sent_h = cur_time.seconds // 3600
             sent_m = (cur_time.seconds // 60) % 60
 
@@ -297,7 +301,7 @@ def fix_the_word(user_id: int, set_word: list):
     return text
 
 
-
+print(get_needed_users())
 
 
 # не понятно, зачем

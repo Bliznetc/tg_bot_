@@ -1,4 +1,5 @@
 import os
+import random
 import threading
 import time
 
@@ -12,6 +13,8 @@ import polls
 
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+
+num_to_part = ["adj", "adv", "noun", "verb", "other"]
 
 
 # Define a function to handle the /start command
@@ -104,7 +107,6 @@ def send_quiz(MesOrNum, need_list=None):
     elif MesOrNum != 0:
         need_list.append(MesOrNum)
 
-
     if not db_interface.check_user_in(need_list[0]):
         bot.send_message(need_list[0], "Нажмите /start")
         return
@@ -126,12 +128,90 @@ def send_quiz_with_dict_id(dict_id, chat_id):
     poll.send(chat_id, bot)
 
 
+# improves a word but in a better way
+@bot.message_handler(commands=['get_word'])
+def send_change_dict(MesOrNum, need_list=None):
+    if need_list is None:
+        need_list = []
+
+    if not isinstance(MesOrNum, int):
+        need_list.append(MesOrNum.chat.id)
+    elif MesOrNum != 0:
+        need_list.append(MesOrNum)
+
+    cur_list = []
+    for user_id in need_list:
+        if db_interface.get_user_access(user_id) == "admin":
+            cur_list.append(user_id)
+
+    for user_id in cur_list:
+        dictionary = db_interface.get_words_by_dict_id("TEST_ALL")
+        part_number = random.randint(0, 4)
+        cur_word = random.choice(dictionary[num_to_part[part_number]])
+        print(cur_word)
+        word = cur_word['word']
+        trsl = cur_word['trsl']
+        trsc = cur_word['trsc']
+        bot.send_message(user_id, f"{word}-{trsl}-{trsc}")
+
+
+@bot.message_handler(content_types=['text'])
+def is_reply_to_bot_message(message):
+    if message.reply_to_message is not None:
+        if message.reply_to_message.content_type == 'text':
+            reply_process_text(message)
+        elif message.reply_to_message.content_type == 'poll':
+            reply_process_poll(message)
+    else:
+        improve_word_1(message)
+
+
+# здесь надо обработать ответ на text
+def reply_process_text (message):
+    word_text = message.reply_to_message.text
+    partOfSpeech = message.text
+    if word_text.count('-') != 2:
+        bot.send_message(message.chat.id, "Видимо, Вы ответили не на нужное сообщение. Попробуйте /improve_word")
+        return
+    arr = [word_text.split("-")[0], partOfSpeech]
+    keyboard = types.ReplyKeyboardMarkup()
+    dict_ids = db_interface.get_dict_ids()
+    for dict_id in dict_ids:
+        keyboard.row(dict_id)
+    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.register_next_step_handler(message, improve_word, arr)
+
+
+# здесь надо обработать ответ на poll
+def reply_process_poll (message):
+    print(message.reply_to_message)
+    poll = message.reply_to_message.poll
+    quest = poll.question
+
+    # extracting the word
+    quest = quest.split(":")[1]
+    quest = quest.split("[")[0]
+    position = 0
+    quest = quest[:position] + quest[position + 1:]
+    position = len(quest) - 1
+    quest = quest[:position] + quest[position + 1:]
+
+    arr = [quest, message.text]
+    keyboard = types.ReplyKeyboardMarkup()
+    dict_ids = db_interface.get_dict_ids()
+    for dict_id in dict_ids:
+        keyboard.row(dict_id)
+    bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
+    bot.register_next_step_handler(message, improve_word, arr)
+
+
 # function to send quizzes to the users
 def check_send_quiz():
     need_list = db_interface.get_needed_users()
     if len(need_list) == 0:
         return
     send_quiz(0, need_list)
+    send_change_dict(need_list)
 
 
 # checks if there are users asking for quiz
@@ -347,7 +427,7 @@ def improve_word_0(message):
     bot.register_next_step_handler(message, improve_word_1)
 
 
-@bot.message_handler(content_types=['text'])
+# @bot.message_handler(content_types=['text'])
 def improve_word_1(message):
     if not db_interface.check_user_in(message.chat.id):
         bot.send_message(message.chat.id, "Нажмите /start")

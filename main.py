@@ -12,9 +12,19 @@ import db_interface
 import polls
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 num_to_part = ["adj", "adv", "noun", "verb", "other"]
+
+def dec_check_user_in(func):
+    def wrapper(message):
+        if db_interface.check_user_in(message.chat.id):
+            func(message)
+        else:
+            print("unregistered user tries to use the bot")
+            bot.send_message(message.chat.id, "Для использования бота нажмите /start")
+    
+    return wrapper
 
 
 # Define a function to handle the /start command
@@ -28,27 +38,22 @@ def start_handler(message):
 
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
+@dec_check_user_in
 def help_handler(message):
-    if db_interface.check_user_in(message.chat.id):
-        bot.reply_to(message,
-                     'Type:\n"/quiz" - to get a quiz\n'
-                     '"/whole_dict" - to get all the words in your dictionary\n'
-                     '"/start_mailing" - to start getting quizzes\n'
-                     '"/stop_mailing" - to stop mailing\n'
-                     '"/change_mailing_time" - to change mailing time\n'
-                     '"/improve_word" - secret\n'
-                     '"/game" - to get a game\n'
-                     '"/change_dict" - to change level of your dictionary')
-    else:
-        bot.send_message(message.chat.id, "Нажмите /start")
+    bot.reply_to(message,
+                 'Type:\n"/quiz" - to get a quiz\n'
+                 '"/whole_dict" - to get all the words in your dictionary\n'
+                 '"/start_mailing" - to start getting quizzes\n'
+                 '"/stop_mailing" - to stop mailing\n'
+                 '"/change_mailing_time" - to change mailing time\n'
+                 '"/improve_word" - secret\n'
+                 '"/game" - to get a game\n'
+                 '"/change_dict" - to change level of your dictionary')
 
 
 @bot.message_handler(commands=['whole_dict'])
+@dec_check_user_in
 def whole_dict_handler(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     dictionary = db_interface.get_words_by_user_id(message.chat.id)
     file_path = "./cache/output.txt"
@@ -65,11 +70,8 @@ def whole_dict_handler(message):
 
 # Add words from files to the dict
 @bot.message_handler(content_types=['document'])
+@dec_check_user_in
 def add_dictionary_from_file(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     if db_interface.get_user_access(message.chat.id) == 'user':
         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
     else:
@@ -186,11 +188,8 @@ def get_valid_integer(text):
 
 # updates user's mailing status
 @bot.message_handler(commands=['start_mailing'])
+@dec_check_user_in
 def start_mailing(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     if message.text == "/start_mailing":
         f = db_interface.started_mailing(message.chat.id)
         if f != 0:
@@ -218,11 +217,8 @@ def start_mailing(message):
 
 # Stops mailing
 @bot.message_handler(commands=['stop_mailing'])
+@dec_check_user_in
 def stop_mailing(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     f = db_interface.started_mailing(message.chat.id)
     if f != 0:
         bot.send_message(message.chat.id, "Остановил рассылку")
@@ -233,11 +229,8 @@ def stop_mailing(message):
 
 # Changes a period of mailing
 @bot.message_handler(commands=['change_mailing_time'])
+@dec_check_user_in
 def change_mailing_time(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
         bot.send_message(message.chat.id, "У Вас не запущена рассылка")
@@ -267,11 +260,8 @@ def change_mailing_time(message):
 
 # Changes user's dict_id
 @bot.message_handler(commands=['change_dict'])
+@dec_check_user_in
 def change_dict(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     keyboard = types.ReplyKeyboardMarkup()
     dict_ids = db_interface.get_dict_ids()
     for dict_id in dict_ids:
@@ -306,11 +296,8 @@ def update_dict_in_bd(message, dict_ids, chosen_option):
 
 # Creates a game for users
 @bot.message_handler(commands=['game'])
+@dec_check_user_in
 def game_get_num(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
     bot.register_next_step_handler(message, game)
 
@@ -364,11 +351,8 @@ def game(message):
 
 # Fixes the word
 @bot.message_handler(commands=['improve_word'])
+@dec_check_user_in
 def improve_word_0(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
         bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
@@ -379,10 +363,6 @@ def improve_word_0(message):
 
 # @bot.message_handler(content_types=['text'])
 def improve_word_1(message):
-    if not db_interface.check_user_in(message.chat.id):
-        bot.send_message(message.chat.id, "Нажмите /start")
-        return
-
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
         bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
@@ -406,6 +386,7 @@ def improve_word(message, arr):
 
 
 @bot.message_handler(content_types=['text'])
+@dec_check_user_in
 def is_reply_to_bot_message(message):
     if message.reply_to_message is not None:
         if message.reply_to_message.content_type == 'text':

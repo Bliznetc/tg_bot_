@@ -17,15 +17,50 @@ bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 num_to_part = ["adj", "adv", "noun", "verb", "other"]
 
 def dec_check_user_in(func):
+    """_summary_
+        Checks if user is registered in the database;
+        If not, sends a message to the user that he needs to register (/start)
+    Args:
+        func (_type_): function
+    """
     def wrapper(message):
         if db_interface.check_user_in(message.chat.id):
             func(message)
         else:
             print("unregistered user tries to use the bot")
             bot.send_message(message.chat.id, "Для использования бота нажмите /start")
-    
     return wrapper
 
+# checks if there are users asking for quiz
+def set_interval(func, sec):
+    """_summary_
+        Sets an interval
+    Args:
+        func (_type_): function
+        sec (_type_): interval
+    """
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+
+    global t
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+
+#на будущеее
+def dec_try_except(func):
+    """_summary_
+        Puts a function into the try-except block
+    Args:
+        func (_type_): function
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            print(e)
+    return wrapper
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
@@ -164,18 +199,6 @@ def check_send_quiz():
         return
     send_quiz(0, need_list)
     send_change_dict(0, need_list)
-
-
-# checks if there are users asking for quiz
-def set_interval(func, sec):
-    def func_wrapper():
-        set_interval(func, sec)
-        func()
-
-    global t
-    t = threading.Timer(sec, func_wrapper)
-    t.start()
-    return t
 
 
 def get_valid_integer(text):

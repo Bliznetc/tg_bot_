@@ -16,6 +16,7 @@ bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 num_to_part = ["adj", "adv", "noun", "verb", "other"]
 
+
 def dec_check_user_in(func):
     """_summary_
         Checks if user is registered in the database;
@@ -23,13 +24,16 @@ def dec_check_user_in(func):
     Args:
         func (_type_): function
     """
+
     def wrapper(message):
         if db_interface.check_user_in(message.chat.id):
             func(message)
         else:
             print("unregistered user tries to use the bot")
             bot.send_message(message.chat.id, "Для использования бота нажмите /start")
+
     return wrapper
+
 
 # checks if there are users asking for quiz
 def set_interval(func, sec):
@@ -39,6 +43,7 @@ def set_interval(func, sec):
         func (_type_): function
         sec (_type_): interval
     """
+
     def func_wrapper():
         set_interval(func, sec)
         func()
@@ -48,19 +53,23 @@ def set_interval(func, sec):
     t.start()
     return t
 
-#на будущеее
+
+# на будущеее
 def dec_try_except(func):
     """_summary_
         Puts a function into the try-except block
     Args:
         func (_type_): function
     """
+
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
         except Exception as e:
             print(e)
+
     return wrapper
+
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
@@ -185,7 +194,7 @@ def send_change_dict(MesOrNum, need_list=None):
         dictionary = db_interface.get_words_by_dict_id("TEST_ALL")
         part_number = random.randint(0, 4)
         cur_word = random.choice(dictionary[num_to_part[part_number]])
-        print(cur_word)
+        # print(cur_word)
         word = cur_word['word']
         trsl = cur_word['trsl']
         trsc = cur_word['trsc']
@@ -401,7 +410,7 @@ def improve_word_1(message):
 
 def improve_word(message, arr):
     arr.append(message.text)
-    for i in range(len(arr)):
+    for i in range(len(arr) - 1):
         arr[i] = arr[i].lower()
 
     text = db_interface.fix_the_word(message.chat.id, arr)
@@ -411,6 +420,10 @@ def improve_word(message, arr):
 @bot.message_handler(content_types=['text'])
 @dec_check_user_in
 def is_reply_to_bot_message(message):
+    access = db_interface.get_user_access(message.chat.id)
+    if access != "admin":
+        bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
+        return
     if message.reply_to_message is not None:
         if message.reply_to_message.content_type == 'text':
             reply_process_text(message)
@@ -421,7 +434,7 @@ def is_reply_to_bot_message(message):
 
 
 # здесь надо обработать ответ на text
-def reply_process_text (message):
+def reply_process_text(message):
     word_text = message.reply_to_message.text
     partOfSpeech = message.text
     if word_text.count('-') != 2:
@@ -437,8 +450,8 @@ def reply_process_text (message):
 
 
 # здесь надо обработать ответ на poll
-def reply_process_poll (message):
-    print(message.reply_to_message)
+def reply_process_poll(message):
+    # print(message.reply_to_message)
     poll = message.reply_to_message.poll
     quest = poll.question
 

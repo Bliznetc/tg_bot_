@@ -42,22 +42,4 @@ def get_word_type(word: str) -> str:
     return word_type
 
 
-def get_word_type_en(word: str) -> str:
-    word = translate_to_english(word, "pl")
-    doc = englishSpacyLibrary(word)
-    word_type = doc[0].pos_
-    word_type = word_type.lower()
-
-    if word_type != 'noun' and word_type != 'adv' and word_type != 'adj' and word_type != 'verb':
-        word_type = 'other'
-
-    return word_type
-
-
-def translate_to_english(word, src_language):
-    translator = Translator()
-    trsl = translator.translate(text=word, src=f"{src_language}", dest='en')
-    return trsl.text
-
-
 # print(translate_to_english("piłka", "pl"))

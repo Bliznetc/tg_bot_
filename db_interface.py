@@ -164,7 +164,7 @@ def update_mailing(user_id: int, new_value):
         cursor.execute(query)
 
         connection.commit()
-        print("Изменил значение Mailing")
+        # print("Изменил значение Mailing")
         cursor.close()
 
 
@@ -213,7 +213,7 @@ def get_needed_users():
             if (now_allm - sent_allm) % period == 0:
                 cur_list.append(a[0])
 
-        print(cur_list)
+        # print(cur_list)
         cursor.close()
         return cur_list
 
@@ -278,6 +278,7 @@ def add_word_to_dict (word, trsl, trsc, partOfSpeech, Dictionary) -> str:
 
 # Fixes bugs in the word
 def fix_the_word(user_id: int, set_word: list):
+    print(user_id, set_word)
     dict_id = get_user_dict_id(user_id=user_id)
     word = trsl = trsc = partOfSpeech = Dictionary = ""
 
@@ -288,6 +289,10 @@ def fix_the_word(user_id: int, set_word: list):
     if len(set_word) == 3:
         word, partOfSpeech, Dictionary = set_word
 
+    dict_ids = get_dict_ids()
+    if Dictionary not in dict_ids:
+        return "Такого словаря нет"
+
     # Удаляем
     cur = delete_word_from_dict(word, trsl, trsc, partOfSpeech, dict_id)
     if len(cur) == 1:
@@ -297,7 +302,7 @@ def fix_the_word(user_id: int, set_word: list):
 
     # Добавляем
     text = add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary)
-
+    print(text)
     return text
 
 # не понятно, зачем

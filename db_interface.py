@@ -300,10 +300,6 @@ def fix_the_word(user_id: int, set_word: list):
 
     return text
 
-
-print(get_needed_users())
-
-
 # не понятно, зачем
 # менять!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Проверка на уникальность

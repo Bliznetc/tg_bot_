@@ -229,7 +229,7 @@ def check_send_quiz():
     if len(need_list) == 0:
         return
     send_quiz(0, need_list)
-    send_change_dict(0, need_list)
+    # send_change_dict(0, need_list)
 
 
 def get_valid_integer(text):

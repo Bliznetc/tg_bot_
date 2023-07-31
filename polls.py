@@ -5,10 +5,10 @@ import random
 
 num_to_part = {
     0: "adj",
-    1: "adv",
-    2: "noun",
-    3: "verb",
-    4: "other",
+    1: "noun",
+    2: "verb",
+    3: "adv",
+    4: "other"
 }
 
 
@@ -32,6 +32,9 @@ class Poll:
 # generates quiz when user types "/quiz"
 def generate_quiz(dict_id='TEST_ALL'):
     dictionary = db_interface.get_words_by_dict_id(dict_id)
+    highest_number = 4
+    if dict_id == 'TEST_ALL':
+        highest_number = 2
     part_number = random.randint(0, 4)
 
     answer_options = random.sample(dictionary[num_to_part[part_number]], 4)

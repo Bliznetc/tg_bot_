@@ -91,6 +91,7 @@ def help_handler(message):
                  '"/stop_mailing" - to stop mailing\n'
                  '"/change_mailing_time" - to change mailing time\n'
                  '"/improve_word" - secret\n'
+                 '"/admin_joking" - secret #2\n'
                  '"/game" - to get a game\n'
                  '"/change_dict" - to change level of your dictionary')
 
@@ -140,6 +141,27 @@ def add_dictionary_from_file(message):
         new_dictionary = pr.prepare_text(file_content)
         text = db_interface.add_new_dictionary(new_dictionary, 'TEST')
         bot.reply_to(message, text)
+
+
+# Sends messages to all users using the bot
+@bot.message_handler(commands=['admin_joking'])
+@dec_check_user_in
+def admin_sends_message(message):
+    if db_interface.get_user_access(message.chat.id) == 'user':
+        bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
+        return
+
+    bot.reply_to(message, "Брат, введи сообщение, которое хочешь отправить юзерам")
+    bot.register_next_step_handler(message, admin_0)
+
+
+def admin_0(message):
+    list_of_users = db_interface.get_user_ids()
+    for id in list_of_users:
+        if db_interface.get_user_access(id) == 'admin' and id != message.chat.id:
+            bot.send_message(id, message.text)
+
+    bot.send_message(message.chat.id, "Отправил :)")
 
 
 # sends quiz

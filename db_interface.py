@@ -1,4 +1,3 @@
-
 import json
 import mysql.connector
 import datetime
@@ -47,6 +46,7 @@ def check_user_in(user_id: int):
 
 
 # returns a dictionary by user id, will be used in whole_dict_handler
+# Applicable for new structure
 def get_words_by_user_id(user_id: int):
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
@@ -55,53 +55,6 @@ def get_words_by_user_id(user_id: int):
 
             dictionary = json.loads(cursor.fetchall()[0][0])  # skipping a few steps
     return dictionary
-
-
-# returns a dictionary by dict_id, can be used in other functions if needed
-def get_words_by_dict_id(dict_id: str):
-    with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
-            cursor.execute(query, (dict_id,))
-
-            dictionary = json.loads(cursor.fetchall()[0][0])
-    return dictionary
-
-
-# returns ALL WORDS FROM ALL DICTIONARIES, will be used only for the development process
-def get_all_words():
-    with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = "SELECT content FROM Dictionaries"
-            cursor.execute(query)
-
-            dividedDictionaries = [json.loads(i[0]) for i in cursor.fetchall()]
-            bigDictionary = {k: [elem for d in dividedDictionaries for elem in d[k]] for k in
-                             dividedDictionaries[0].keys()}  # python magic # это какой-то реальный мэджик
-    return bigDictionary
-
-
-# returns list of all dict_ids
-def get_dict_ids():
-    with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = "SELECT dict_id FROM Dictionaries"
-            cursor.execute(query, )
-
-            dictionary = cursor.fetchall()
-            dict_ids = [row[0] for row in dictionary]
-    return dict_ids
-
-
-# creates a new record in table Dictionaries
-def add_new_dictionary(new_dictionary: dict, dict_id: str):
-    with connection_pool.get_connection() as connection:
-        with connection.cursor() as cursor:
-            query = "INSERT INTO Dictionaries (dict_id, content) VALUES (%s, %s)"
-            cursor.execute(query, (dict_id, json.dumps(new_dictionary)))
-
-            connection.commit()
-    return f"Создан новый словарь {dict_id}"
 
 
 # potentially functions below can be separated into different file
@@ -218,24 +171,80 @@ def get_needed_users():
         return cur_list
 
 
-# Deletes a word from its dictionary
-def delete_word_from_dict (word, trsl, trsc, partOfSpeech, dict_id) -> list:
+# For better look of the code
+# All the function below work with table "Dictionaries", while above functions work with "Users"
+
+# returns a dictionary by dict_id, can be used in other functions if needed
+# Applicable for new structure
+def get_words_by_dict_id(dict_id: str):
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
             query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (dict_id,))
+
+            dictionary = json.loads(cursor.fetchall()[0][0])
+    return dictionary
+
+
+# returns ALL WORDS FROM ALL DICTIONARIES, will be used only for the development process
+def get_all_words():
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            query = "SELECT content FROM Dictionaries"
+            cursor.execute(query)
+
+            dividedDictionaries = [json.loads(i[0]) for i in cursor.fetchall()]
+            bigDictionary = {k: [elem for d in dividedDictionaries for elem in d[k]] for k in
+                             dividedDictionaries[0].keys()}  # python magic # это какой-то реальный мэджик
+    return bigDictionary
+
+
+# returns list of all dict_ids
+# Works with new structure
+def get_dict_ids():
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            query = "SELECT dict_id FROM Dictionaries"
+            cursor.execute(query, )
+
+            dictionary = cursor.fetchall()
+            dict_ids = [row[0] for row in dictionary]
+    return dict_ids
+
+
+# creates a new record in table Dictionaries
+# applicable for new structure
+def add_new_dictionary(new_dictionary: dict, dict_id: str):
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            query = "INSERT INTO Dictionaries (dict_id, content) VALUES (%s, %s)"
+            cursor.execute(query, (dict_id, json.dumps(new_dictionary)))
+
+            connection.commit()
+    return f"Создан новый словарь {dict_id}"
+
+
+# Deletes a word from its dictionary
+# Works for new structure
+def delete_word_from_dict(word, trsl, trsc, partOfSpeech, Dictionary) -> list:
+    with connection_pool.get_connection() as connection:
+        with connection.cursor() as cursor:
+            query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
+            cursor.execute(query, (Dictionary,))
             f = 0
             dictionary = json.loads(cursor.fetchall()[0][0])
             for cur_part in dictionary:
-                for i in range(len(dictionary[cur_part])):
-                    if dictionary[cur_part][i]['word'] == word:
+                for i in range(len(dictionary[cur_part]['word'])):
+                    if dictionary[cur_part]['word'][i] == word:
                         if trsl == "":
-                            trsl = dictionary[cur_part][i]['trsl']
+                            trsl = dictionary[cur_part]['trsl'][i]
                         if trsc == "":
-                            trsc = dictionary[cur_part][i]['trsc']
+                            trsc = dictionary[cur_part]['trsc'][i]
                         if partOfSpeech == "":
                             partOfSpeech = cur_part
-                        del dictionary[cur_part][i]
+                        del dictionary[cur_part]['word'][i]
+                        del dictionary[cur_part]['trsl'][i]
+                        del dictionary[cur_part]['trsc'][i]
                         f = 1
                         break
 
@@ -250,22 +259,24 @@ def delete_word_from_dict (word, trsl, trsc, partOfSpeech, dict_id) -> list:
 
             content = json.dumps(dictionary)
             query = "UPDATE Dictionaries SET content = %s WHERE dict_id = %s"
-            cursor.execute(query, (content, dict_id))
+            cursor.execute(query, (content, Dictionary))
 
             connection.commit()
             return cur
 
 
 # Adds a word to new dictionary
-def add_word_to_dict (word, trsl, trsc, partOfSpeech, Dictionary) -> str:
+# Works for new structure
+def add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary) -> str:
     with connection_pool.get_connection() as connection:
         with connection.cursor() as cursor:
             query = "SELECT content FROM Dictionaries WHERE dict_id = %s"
             cursor.execute(query, (Dictionary,))
 
             dictionary = json.loads(cursor.fetchall()[0][0])
-            dictionary[partOfSpeech].append(
-                {'word': word, 'trsl': trsl, 'trsc': trsc})
+            dictionary[partOfSpeech]['word'].append(word)
+            dictionary[partOfSpeech]['trsl'].append(trsl)
+            dictionary[partOfSpeech]['trsc'].append(trsc)
 
             print("Обновил словарь - " + word + " " + trsl + " " + Dictionary)
             content = json.dumps(dictionary)
@@ -277,6 +288,7 @@ def add_word_to_dict (word, trsl, trsc, partOfSpeech, Dictionary) -> str:
 
 
 # Fixes bugs in the word
+# Applicable for new structure
 def fix_the_word(user_id: int, set_word: list):
     print(user_id, set_word)
     dict_id = get_user_dict_id(user_id=user_id)
@@ -315,4 +327,3 @@ def fix_the_word(user_id: int, set_word: list):
 #             f = 0
 #             break
 #     return f
-

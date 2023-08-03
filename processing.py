@@ -8,13 +8,35 @@ englishSpacyLibrary = spacy.load('en_core_web_sm/en_core_web_sm-3.5.0')
 
 def prepare_text(text: str) -> dict:
     arr = text.split(';')
+
     new_dictionary = {
-        "noun": [],
-        "verb": [],
-        "adj": [],
-        "adv": [],
-        "other": []
+        "noun": {
+            "word": [],
+            "trsl": [],
+            "trsc": []
+        },
+        "verb": {
+            "word": [],
+            "trsl": [],
+            "trsc": []
+        },
+        "adj": {
+            "word": [],
+            "trsl": [],
+            "trsc": []
+        },
+        "adv": {
+            "word": [],
+            "trsl": [],
+            "trsc": []
+        },
+        "other": {
+            "word": [],
+            "trsl": [],
+            "trsc": []
+        }
     }
+
     for x in arr:
         if x.find('-') == -1:
             continue
@@ -27,7 +49,9 @@ def prepare_text(text: str) -> dict:
             new_meaning = new_meaning[1:]
 
         partOfSpeech = get_word_type(new_key)
-        new_dictionary[partOfSpeech].append({"word": new_key, "trsl": new_meaning, "trsc": new_trsc})
+        new_dictionary[partOfSpeech]['word'].append(new_key)
+        new_dictionary[partOfSpeech]['trsl'].append(new_meaning)
+        new_dictionary[partOfSpeech]['trsc'].append(new_trsc)
     return new_dictionary
 
 

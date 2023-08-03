@@ -106,8 +106,8 @@ def whole_dict_handler(message):
     with open(file_path, "w", encoding="utf-8") as file:
         for partOfSpeech in dictionary:
             file.write(f"{partOfSpeech}:\n")
-            for word in dictionary[partOfSpeech]:
-                file.write(f"{word['word']}-{word['trsl']}-{word['trsc']}\n")
+            for x in range(len(dictionary[partOfSpeech]['word'])):
+                file.write(f"{dictionary[partOfSpeech]['word'][x]}-{dictionary[partOfSpeech]['trsl'][x]}-{dictionary[partOfSpeech]['trsc'][x]}\n")
 
     bot.send_document(chat_id=message.chat.id, document=open(file_path, "rb"))
     os.remove(file_path)
@@ -319,6 +319,9 @@ def change_dict(message):
     keyboard = types.ReplyKeyboardMarkup()
     dict_ids = db_interface.get_dict_ids()
     for dict_id in dict_ids:
+        if dict_id == "ALL" or dict_id.find("TEST") != -1:
+            continue
+
         keyboard.row(dict_id)
     bot.send_message(message.chat.id, "Перед изменением словаря Вам будут даны несколько квизов, чтобы примерно "
                                       "понимать, какой уровень слов в словаре. Выберите словарь", reply_markup=keyboard)

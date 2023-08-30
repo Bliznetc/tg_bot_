@@ -85,6 +85,7 @@ def dec_try_except(func):
 
 # Define a function to handle the /start command
 @bot.message_handler(commands=['start'])
+@tryExceptWithFunctionName
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))

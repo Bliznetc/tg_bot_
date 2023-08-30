@@ -35,6 +35,8 @@ def generate_quiz(dict_id='ALL'):
     highest_number = 4
     if dict_id == 'ALL':
         highest_number = 1
+    if dict_id == 'C1':
+        highest_number = 3
     part_number = random.randint(0, highest_number)
 
     indexes_options = random.sample(range(0, len(dictionary[num_to_part[part_number]]['word'])), 4)

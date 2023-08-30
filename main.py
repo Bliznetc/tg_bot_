@@ -12,7 +12,7 @@ import db_interface
 import polls
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 num_to_part = ["adj", "adv", "noun", "verb", "other"]
 
@@ -31,6 +31,18 @@ def dec_check_user_in(func):
         else:
             print("unregistered user tries to use the bot")
             bot.send_message(message.chat.id, "Для использования бота нажмите /start")
+
+    return wrapper
+
+
+# Debugs our great code to find the bug
+def tryExceptWithFunctionName(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(e)
+            print(f"{func.__name__} - error occurred here")
 
     return wrapper
 
@@ -83,6 +95,7 @@ def start_handler(message):
 # Define a function to handle the /help command
 @bot.message_handler(commands=['help'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def help_handler(message):
     bot.reply_to(message,
                  'Type:\n"/quiz" - to get a quiz\n'
@@ -98,6 +111,7 @@ def help_handler(message):
 
 @bot.message_handler(commands=['whole_dict'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def whole_dict_handler(message):
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     dictionary = db_interface.get_words_by_user_id(message.chat.id)
@@ -116,6 +130,7 @@ def whole_dict_handler(message):
 # Add words from files to the dict
 @bot.message_handler(content_types=['document'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def add_dictionary_from_file(message):
     if db_interface.get_user_access(message.chat.id) == 'user':
         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
@@ -146,6 +161,7 @@ def add_dictionary_from_file(message):
 # Sends messages to all users using the bot
 @bot.message_handler(commands=['admin_joking'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def admin_sends_message(message):
     if db_interface.get_user_access(message.chat.id) == 'user':
         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
@@ -166,6 +182,7 @@ def admin_0(message):
 
 # sends quiz
 @bot.message_handler(commands=['quiz'])
+@tryExceptWithFunctionName
 def send_quiz(MesOrNum, need_list=None):
     if need_list is None:
         need_list = []
@@ -191,12 +208,14 @@ def send_quiz(MesOrNum, need_list=None):
 
 
 # sends quiz with specific dict_id
+@tryExceptWithFunctionName
 def send_quiz_with_dict_id(dict_id, chat_id):
     poll = polls.create_poll(dict_id)
     poll.send(chat_id, bot)
 
 
 # improves a word but in a better way
+@tryExceptWithFunctionName
 @bot.message_handler(commands=['get_word'])
 def send_change_dict(MesOrNum, need_list=None):
     if need_list is None:
@@ -243,6 +262,7 @@ def get_valid_integer(text):
 # updates user's mailing status
 @bot.message_handler(commands=['start_mailing'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def start_mailing(message):
     if message.text == "/start_mailing":
         f = db_interface.started_mailing(message.chat.id)
@@ -272,6 +292,7 @@ def start_mailing(message):
 # Stops mailing
 @bot.message_handler(commands=['stop_mailing'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def stop_mailing(message):
     f = db_interface.started_mailing(message.chat.id)
     if f != 0:
@@ -284,6 +305,7 @@ def stop_mailing(message):
 # Changes a period of mailing
 @bot.message_handler(commands=['change_mailing_time'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def change_mailing_time(message):
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
@@ -315,6 +337,7 @@ def change_mailing_time(message):
 # Changes user's dict_id
 @bot.message_handler(commands=['change_dict'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def change_dict(message):
     keyboard = types.ReplyKeyboardMarkup()
     dict_ids = db_interface.get_dict_ids()
@@ -328,6 +351,7 @@ def change_dict(message):
     bot.register_next_step_handler(message, handle_buttons, dict_ids)
 
 
+@tryExceptWithFunctionName
 def handle_buttons(message, dict_ids):
     chosen_option = message.text
     if chosen_option not in dict_ids:
@@ -341,6 +365,7 @@ def handle_buttons(message, dict_ids):
     bot.register_next_step_handler(message, update_dict_in_bd, dict_ids, chosen_option)
 
 
+@tryExceptWithFunctionName
 def update_dict_in_bd(message, dict_ids, chosen_option):
     cur_text = message.text
     if cur_text != "/yes":
@@ -354,11 +379,13 @@ def update_dict_in_bd(message, dict_ids, chosen_option):
 # Creates a game for users
 @bot.message_handler(commands=['game'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def game_get_num(message):
     bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
     bot.register_next_step_handler(message, game)
 
 
+@tryExceptWithFunctionName
 def game(message):
     try:
         times = get_valid_integer(message.text)
@@ -409,6 +436,7 @@ def game(message):
 # Fixes the word
 @bot.message_handler(commands=['improve_word'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def improve_word_0(message):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
@@ -419,6 +447,7 @@ def improve_word_0(message):
 
 
 # @bot.message_handler(content_types=['text'])
+@tryExceptWithFunctionName
 def improve_word_1(message):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
@@ -433,6 +462,7 @@ def improve_word_1(message):
     bot.register_next_step_handler(message, improve_word, arr)
 
 
+@tryExceptWithFunctionName
 def improve_word(message, arr):
     arr.append(message.text)
     for i in range(len(arr) - 1):
@@ -444,6 +474,7 @@ def improve_word(message, arr):
 
 @bot.message_handler(content_types=['text'])
 @dec_check_user_in
+@tryExceptWithFunctionName
 def is_reply_to_bot_message(message):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
@@ -459,6 +490,7 @@ def is_reply_to_bot_message(message):
 
 
 # здесь надо обработать ответ на text
+@tryExceptWithFunctionName
 def reply_process_text(message):
     word_text = message.reply_to_message.text
     partOfSpeech = message.text
@@ -475,6 +507,7 @@ def reply_process_text(message):
 
 
 # здесь надо обработать ответ на poll
+@tryExceptWithFunctionName
 def reply_process_poll(message):
     # print(message.reply_to_message)
     poll = message.reply_to_message.poll

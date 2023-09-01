@@ -11,6 +11,8 @@ import processing as pr
 import db_interface
 import polls
 
+from telegram.error import Conflict
+
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
@@ -531,8 +533,14 @@ def reply_process_poll(message):
     bot.register_next_step_handler(message, improve_word, arr)
 
 
-print(__name__)
-set_interval(check_send_quiz, 60)
+def main():
+    try:
+        print(__name__)
+        set_interval(check_send_quiz, 60)
+        bot.polling()
+    except Conflict:
+        print("Another instance of the bot is running. Exiting.")
+        exit(1)
 
 if __name__ == '__main__':
-    bot.polling()
+    main()

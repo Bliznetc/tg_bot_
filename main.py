@@ -12,12 +12,28 @@ import db_interface
 import polls
 
 from telegram.error import Conflict
+from requests.exceptions import ConnectionError
+from functools import wraps
 
 # Initialize the bot using the bot token
 bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 num_to_part = ["noun", "verb", "adj", "adv", "other"]
 
+def retry_on_connection_error(max_retries=5):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for i in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except ConnectionError as e:
+                    wait = 2 ** i  # exponential backoff
+                    time.sleep(wait)
+                    continue
+            return None  # or you can re-raise the last exception
+        return wrapper
+    return decorator 
 
 def dec_check_user_in(func):
     """_summary_
@@ -68,26 +84,11 @@ def set_interval(func, sec):
     return t
 
 
-# на будущеее
-def dec_try_except(func):
-    """_summary_
-        Puts a function into the try-except block
-    Args:
-        func (_type_): function
-    """
-
-    def wrapper(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except Exception as e:
-            print(e)
-
-    return wrapper
-
-
 # Define a function to handle the /start command
-@tryExceptWithFunctionName
+
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['start'])
+@tryExceptWithFunctionName
 def start_handler(message):
     menu_keyboard = ReplyKeyboardMarkup(row_width=1)
     menu_keyboard.add(KeyboardButton('/help'))
@@ -96,6 +97,7 @@ def start_handler(message):
 
 
 # Define a function to handle the /help command
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['help'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -111,7 +113,7 @@ def help_handler(message):
                  '"/game" - to get a game\n'
                  '"/change_dict" - to change level of your dictionary')
 
-
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['whole_dict'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -131,6 +133,7 @@ def whole_dict_handler(message):
 
 
 # Add words from files to the dict
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(content_types=['document'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -162,6 +165,7 @@ def add_dictionary_from_file(message):
 
 
 # Sends messages to all users using the bot
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['admin_joking'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -184,6 +188,7 @@ def admin_0(message):
 
 
 # sends quiz
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['quiz'])
 @tryExceptWithFunctionName
 def send_quiz(MesOrNum, need_list=None):
@@ -211,6 +216,7 @@ def send_quiz(MesOrNum, need_list=None):
 
 
 # sends quiz with specific dict_id
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def send_quiz_with_dict_id(dict_id, chat_id):
     poll = polls.create_poll(dict_id)
@@ -218,8 +224,9 @@ def send_quiz_with_dict_id(dict_id, chat_id):
 
 
 # improves a word but in a better way
-@tryExceptWithFunctionName
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['get_word'])
+@tryExceptWithFunctionName
 def send_change_dict(MesOrNum, need_list=None):
     if need_list is None:
         need_list = []
@@ -263,6 +270,7 @@ def get_valid_integer(text):
 
 
 # updates user's mailing status
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['start_mailing'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -293,6 +301,7 @@ def start_mailing(message):
 
 
 # Stops mailing
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['stop_mailing'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -306,6 +315,7 @@ def stop_mailing(message):
 
 
 # Changes a period of mailing
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['change_mailing_time'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -338,6 +348,7 @@ def change_mailing_time(message):
 
 
 # Changes user's dict_id
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['change_dict'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -353,7 +364,7 @@ def change_dict(message):
                                       "понимать, какой уровень слов в словаре. Выберите словарь", reply_markup=keyboard)
     bot.register_next_step_handler(message, handle_buttons, dict_ids)
 
-
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def handle_buttons(message, dict_ids):
     chosen_option = message.text
@@ -367,7 +378,7 @@ def handle_buttons(message, dict_ids):
     bot.send_message(message.chat.id, "Если вас устраивает словарь, нажмите /yes, иначе выберите другой словарь")
     bot.register_next_step_handler(message, update_dict_in_bd, dict_ids, chosen_option)
 
-
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def update_dict_in_bd(message, dict_ids, chosen_option):
     cur_text = message.text
@@ -380,6 +391,7 @@ def update_dict_in_bd(message, dict_ids, chosen_option):
 
 
 # Creates a game for users
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['game'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -387,7 +399,7 @@ def game_get_num(message):
     bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
     bot.register_next_step_handler(message, game)
 
-
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def game(message):
     try:
@@ -437,6 +449,7 @@ def game(message):
 
 
 # Fixes the word
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['improve_word'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -450,6 +463,7 @@ def improve_word_0(message):
 
 
 # @bot.message_handler(content_types=['text'])
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def improve_word_1(message):
     access = db_interface.get_user_access(message.chat.id)
@@ -465,6 +479,7 @@ def improve_word_1(message):
     bot.register_next_step_handler(message, improve_word, arr)
 
 
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def improve_word(message, arr):
     arr.append(message.text)
@@ -475,6 +490,7 @@ def improve_word(message, arr):
     bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
 
 
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(content_types=['text'])
 @dec_check_user_in
 @tryExceptWithFunctionName
@@ -493,6 +509,7 @@ def is_reply_to_bot_message(message):
 
 
 # здесь надо обработать ответ на text
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def reply_process_text(message):
     word_text = message.reply_to_message.text
@@ -510,6 +527,7 @@ def reply_process_text(message):
 
 
 # здесь надо обработать ответ на poll
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def reply_process_poll(message):
     # print(message.reply_to_message)

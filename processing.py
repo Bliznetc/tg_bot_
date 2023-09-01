@@ -1,5 +1,4 @@
 import spacy
-from googletrans import Translator
 import time
 
 polishSpacyLibrary = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')

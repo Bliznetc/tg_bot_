@@ -12,9 +12,9 @@ import db_interface
 import polls
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
+bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
-num_to_part = ["adj", "adv", "noun", "verb", "other"]
+num_to_part = ["noun", "verb", "adj", "adv", "other"]
 
 
 def dec_check_user_in(func):

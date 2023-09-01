@@ -4,9 +4,9 @@ import db_interface
 import random
 
 num_to_part = {
-    0: "adj",
-    1: "noun",
-    2: "verb",
+    0: "noun",
+    1: "verb",
+    2: "adj",
     3: "adv",
     4: "other"
 }

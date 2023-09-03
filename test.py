@@ -43,6 +43,9 @@ import db_interface
 #     print('----------------------------------------------')
 #     return string
 
+
+
+# Do not erase!!! Print the number of left words in dictionaries
 dict_ids = db_interface.get_dict_ids()
 #
 num_to_part = ["noun", "verb", "adj", "adv", "other"]
@@ -55,7 +58,7 @@ for dict in dict_ids:
         print (x + " - ", len(cur_dict[x]['word']))
         sum += len(cur_dict[x]['word'])
     print(sum)
-# #
+#
 
 
 # print (db_interface.get_words_by_dict_id("A1"))
@@ -69,3 +72,26 @@ for dict in dict_ids:
 # text = db_interface.add_new_dictionary(new_dictionary, 'ALL')
 
 # print(db_interface.get_words_by_user_id(745553839))
+
+
+# add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary) -> str:
+# check uniqueness
+# word = "wypeLniać"
+# trsl = "sransk"
+# trsc = "shit"
+# partOfSpeech = "other"
+# Dictionary = "ALL"
+# uniqueness = 1
+# dict_ids = db_interface.get_dict_ids()
+# num_to_part = ["noun", "verb", "adj", "adv", "other"]
+# for dict_id in dict_ids:
+#     cur_dict = db_interface.get_words_by_dict_id(dict_id)
+#     for x in num_to_part:
+#         for i in range(len(cur_dict[x]['word'])):
+#             if cur_dict[x]['word'][i].lower() == word.lower():
+#                 uniqueness = 0
+#                 break
+#
+# print(uniqueness)
+# if uniqueness:
+#     print(db_interface.add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary))

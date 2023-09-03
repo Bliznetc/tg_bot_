@@ -186,6 +186,7 @@ def admin_sends_message(message):
     bot.register_next_step_handler(message, admin_0)
 
 
+@tryExceptWithFunctionName
 def admin_0(message):
     list_of_users = db_interface.get_user_ids()
     for id in list_of_users:
@@ -261,6 +262,7 @@ def send_change_dict(MesOrNum, need_list=None):
 
 
 # function to send quizzes to the users
+@tryExceptWithFunctionName
 def check_send_quiz():
     need_list = db_interface.get_needed_users()
     if len(need_list) == 0:

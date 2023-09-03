@@ -30,7 +30,7 @@ class Poll:
 
 
 # generates quiz when user types "/quiz"
-def generate_quiz(dict_id='ALL'):
+def generate_quiz(dict_id='B1'):
     dictionary = db_interface.get_words_by_dict_id(dict_id)
     highest_number = 4
     if dict_id == 'ALL':

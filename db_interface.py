@@ -3,7 +3,6 @@ import mysql.connector
 import datetime
 from datetime import datetime
 import time
-import processing
 
 t = time.time()
 try:

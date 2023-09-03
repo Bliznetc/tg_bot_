@@ -7,6 +7,7 @@ import telebot
 from telebot import types
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import constants as const
+import processing
 import processing as pr
 import db_interface
 import polls
@@ -20,6 +21,7 @@ bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
 
 num_to_part = ["noun", "verb", "adj", "adv", "other"]
 
+
 def retry_on_connection_error(max_retries=5):
     def decorator(func):
         @wraps(func)
@@ -32,8 +34,11 @@ def retry_on_connection_error(max_retries=5):
                     time.sleep(wait)
                     continue
             return None  # or you can re-raise the last exception
+
         return wrapper
-    return decorator 
+
+    return decorator
+
 
 def dec_check_user_in(func):
     """_summary_
@@ -43,9 +48,9 @@ def dec_check_user_in(func):
         func (_type_): function
     """
 
-    def wrapper(message):
+    def wrapper(message, *args, **kwargs):
         if db_interface.check_user_in(message.chat.id):
-            func(message)
+            func(message, *args, **kwargs)
         else:
             print("unregistered user tries to use the bot")
             bot.send_message(message.chat.id, "Для использования бота нажмите /start")
@@ -111,7 +116,9 @@ def help_handler(message):
                  '"/improve_word" - secret\n'
                  '"/admin_joking" - secret #2\n'
                  '"/game" - to get a game\n'
+                 '"/add_word" - to add word to a dictionary\n'
                  '"/change_dict" - to change level of your dictionary')
+
 
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['whole_dict'])
@@ -126,7 +133,8 @@ def whole_dict_handler(message):
         for partOfSpeech in dictionary:
             file.write(f"{partOfSpeech}:\n")
             for x in range(len(dictionary[partOfSpeech]['word'])):
-                file.write(f"{dictionary[partOfSpeech]['word'][x]}-{dictionary[partOfSpeech]['trsl'][x]}-{dictionary[partOfSpeech]['trsc'][x]}\n")
+                file.write(
+                    f"{dictionary[partOfSpeech]['word'][x]}-{dictionary[partOfSpeech]['trsl'][x]}-{dictionary[partOfSpeech]['trsc'][x]}\n")
 
     bot.send_document(chat_id=message.chat.id, document=open(file_path, "rb"))
     os.remove(file_path)
@@ -364,6 +372,7 @@ def change_dict(message):
                                       "понимать, какой уровень слов в словаре. Выберите словарь", reply_markup=keyboard)
     bot.register_next_step_handler(message, handle_buttons, dict_ids)
 
+
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def handle_buttons(message, dict_ids):
@@ -377,6 +386,7 @@ def handle_buttons(message, dict_ids):
 
     bot.send_message(message.chat.id, "Если вас устраивает словарь, нажмите /yes, иначе выберите другой словарь")
     bot.register_next_step_handler(message, update_dict_in_bd, dict_ids, chosen_option)
+
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -398,6 +408,7 @@ def update_dict_in_bd(message, dict_ids, chosen_option):
 def game_get_num(message):
     bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
     bot.register_next_step_handler(message, game)
+
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -453,19 +464,19 @@ def game(message):
 @bot.message_handler(commands=['improve_word'])
 @dec_check_user_in
 @tryExceptWithFunctionName
-def improve_word_0(message):
+def improve_word_0(message, is_add=0):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
         bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
         return
     bot.send_message(message.chat.id, "формат: слово,перевод,транскрипция,часть речи (без пробелов!!)")
-    bot.register_next_step_handler(message, improve_word_1)
+    bot.register_next_step_handler(message, improve_word_1, is_add)
 
 
 # @bot.message_handler(content_types=['text'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
-def improve_word_1(message):
+def improve_word_1(message, is_add=0):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
         bot.send_message(message.chat.id, "У вас недостаточно прав o_0")
@@ -476,19 +487,38 @@ def improve_word_1(message):
     for dict_id in dict_ids:
         keyboard.row(dict_id)
     bot.send_message(message.chat.id, "Выберите словарь", reply_markup=keyboard)
-    bot.register_next_step_handler(message, improve_word, arr)
+    bot.register_next_step_handler(message, improve_word, arr, is_add)
 
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
-def improve_word(message, arr):
+def improve_word(message, arr, is_add):
     arr.append(message.text)
     for i in range(len(arr) - 1):
         arr[i] = arr[i].lower()
 
+    if is_add:
+        uniqueness = processing.check_uniqueness(arr[0])
+        if not uniqueness:
+            return
+        text = db_interface.add_word_to_dict(arr[0], arr[1], arr[2], arr[3], arr[4])
+        bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
+        return
+
     text = db_interface.fix_the_word(message.chat.id, arr)
     bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
 
+
+# adds word manually
+@retry_on_connection_error(max_retries=5)
+@bot.message_handler(commands=['add_word'])
+@dec_check_user_in
+@tryExceptWithFunctionName
+def add_word_manually(message):
+    improve_word_0(message, 1)
+
+
+# After that goes a function that works with text not a command
 
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(content_types=['text'])
@@ -559,6 +589,7 @@ def main():
     except Conflict:
         print("Another instance of the bot is running. Exiting.")
         exit(1)
+
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
 import spacy
-import time
+import db_interface
 
 polishSpacyLibrary = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
 englishSpacyLibrary = spacy.load('en_core_web_sm/en_core_web_sm-3.5.0')
@@ -64,5 +64,22 @@ def get_word_type(word: str) -> str:
     
     return word_type
 
+
+def check_uniqueness(word: str) -> bool:
+    uniqueness = True
+    dict_ids = db_interface.get_dict_ids()
+    num_to_part = ["noun", "verb", "adj", "adv", "other"]
+    for dict_id in dict_ids:
+        if not uniqueness:
+            break
+        cur_dict = db_interface.get_words_by_dict_id(dict_id)
+        for x in num_to_part:
+            if not uniqueness:
+                break
+            for i in range(len(cur_dict[x]['word'])):
+                if cur_dict[x]['word'][i].lower() == word.lower():
+                    uniqueness = False
+                    break
+    return uniqueness
 
 # print(translate_to_english("piłka", "pl"))

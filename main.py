@@ -500,6 +500,7 @@ def improve_word(message, arr, is_add):
     if is_add:
         uniqueness = processing.check_uniqueness(arr[0])
         if not uniqueness:
+            bot.send_message(message.chat.id, "Такое слово уже существует :)", reply_markup=ReplyKeyboardRemove())
             return
         text = db_interface.add_word_to_dict(arr[0], arr[1], arr[2], arr[3], arr[4])
         bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())

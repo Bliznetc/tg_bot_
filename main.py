@@ -587,7 +587,7 @@ def reply_process_poll(message):
 def main():
     try:
         print(__name__)
-        set_interval(check_send_quiz, 60)
+        #set_interval(check_send_quiz, 60)
         bot.polling()
     except Conflict:
         print("Another instance of the bot is running. Exiting.")

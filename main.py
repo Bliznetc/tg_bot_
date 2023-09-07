@@ -494,7 +494,7 @@ def improve_word_1(message, is_add=0):
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
-def improve_word(message, arr, is_add):
+def improve_word(message, arr, is_add=0):
     arr.append(message.text)
     for i in range(len(arr) - 1):
         arr[i] = arr[i].lower()

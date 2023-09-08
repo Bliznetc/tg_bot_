@@ -90,11 +90,13 @@ rate_limit_max_messages = 1
 def rate_limit_decorator(func):
     @functools.wraps(func)
     def wrapper(message, *args, **kwargs):
-        # print("rate_limit is done")
-        # print(message.text)
-        # print(func.__name__)
+        print("rate_limit is done")
+        print(message.text)
+        print(func.__name__)
         user_id = message.from_user.id
         now = time.time()
+        print(now)
+        print(last_message_time)
         # Check if the user is in the dictionary and the rate limit is exceeded
         if user_id in last_message_time:
             if now - last_message_time[user_id] < rate_limit_window:

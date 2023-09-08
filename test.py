@@ -9,8 +9,6 @@
 import processing as pr
 import db_interface
 
-# import re
-# import codecs
 #
 #
 # def formating(dict_id):

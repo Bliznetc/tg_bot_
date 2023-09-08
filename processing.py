@@ -2,7 +2,7 @@ import spacy
 import db_interface
 
 polishSpacyLibrary = spacy.load('pl_core_news_sm/pl_core_news_sm-3.5.0')
-englishSpacyLibrary = spacy.load('en_core_web_sm/en_core_web_sm-3.5.0')
+# englishSpacyLibrary = spacy.load('en_core_web_sm/en_core_web_sm-3.5.0')
 
 
 def prepare_text(text: str) -> dict:
@@ -61,7 +61,7 @@ def get_word_type(word: str) -> str:
 
     if word_type != 'noun' and word_type != 'adv' and word_type != 'adj' and word_type != 'verb':
         word_type = 'other'
-    
+
     return word_type
 
 
@@ -82,4 +82,3 @@ def check_uniqueness(word: str) -> bool:
                     break
     return uniqueness
 
-# print(translate_to_english("piłka", "pl"))

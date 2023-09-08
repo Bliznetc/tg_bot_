@@ -1,7 +1,8 @@
+import functools
 import os
-import random
 import threading
 import time
+import datetime
 
 import telebot
 from telebot import types
@@ -14,17 +15,19 @@ import polls
 
 from telegram.error import Conflict
 from requests.exceptions import ConnectionError
-from functools import wraps
+# from functools import wraps
 
 # Initialize the bot using the bot token
-bot = telebot.TeleBot(f"{const.API_KEY_HOSTED}")
+bot = telebot.TeleBot(f"{const.API_KEY_TEST}")
 
 num_to_part = ["noun", "verb", "adj", "adv", "other"]
 
 
 def retry_on_connection_error(max_retries=5):
     def decorator(func):
-        @wraps(func)
+        # print("retry is done")
+
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             for i in range(max_retries):
                 try:
@@ -34,7 +37,6 @@ def retry_on_connection_error(max_retries=5):
                     time.sleep(wait)
                     continue
             return None  # or you can re-raise the last exception
-
         return wrapper
 
     return decorator
@@ -48,7 +50,11 @@ def dec_check_user_in(func):
         func (_type_): function
     """
 
+    @functools.wraps(func)
     def wrapper(message, *args, **kwargs):
+        # print("check_user_in is done")
+        # print(func.__name__)
+
         if db_interface.check_user_in(message.chat.id):
             func(message, *args, **kwargs)
         else:
@@ -60,52 +66,74 @@ def dec_check_user_in(func):
 
 # Debugs our great code to find the bug
 def tryExceptWithFunctionName(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        # print("try func is done")
+        # print(func.__name__)
         try:
             return func(*args, **kwargs)
         except Exception as e:
             print(e)
             print(f"{func.__name__} - error occurred here")
+    return wrapper
+
+
+last_message_time = {}
+rate_limit_window = 1
+rate_limit_max_messages = 1
+
+
+# A global rate limiter to ensure no single user gets above a fixed number of messages per second.
+def rate_limit_decorator(func):
+    @functools.wraps(func)
+    def wrapper(message, *args, **kwargs):
+        # print("rate_limit is done")
+        # print(message.text)
+        # print(func.__name__)
+        user_id = message.from_user.id
+        now = time.time()
+        # Check if the user is in the dictionary and the rate limit is exceeded
+        if user_id in last_message_time:
+            if now - last_message_time[user_id] < rate_limit_window:
+                bot.send_message(user_id, "You've exceeded the rate limit.")
+                return
+
+        # Update the last message time for the user
+        last_message_time[user_id] = now
+
+        # Call the original function
+        func(message, *args, **kwargs)
 
     return wrapper
 
 
 # checks if there are users asking for quiz
-def set_interval(func, sec):
-    """_summary_
-        Sets an interval
-    Args:
-        func (_type_): function
-        sec (_type_): interval
-    """
+# def set_interval(func, sec):
+#     """_summary_
+#         Sets an interval
+#     Args:
+#         func (_type_): function
+#         sec (_type_): interval
+#     """
+#
+#     def func_wrapper():
+#         set_interval(func, sec)
+#         func()
+#
+#     global t
+#     t = threading.Timer(sec, func_wrapper)
+#     t.start()
+#     return t
 
-    def func_wrapper():
-        set_interval(func, sec)
-        func()
-
-    global t
-    t = threading.Timer(sec, func_wrapper)
-    t.start()
-    return t
-
-
-# Define a function to handle the /start command
-
-@retry_on_connection_error(max_retries=5)
-@bot.message_handler(commands=['start'])
-@tryExceptWithFunctionName
-def start_handler(message):
-    menu_keyboard = ReplyKeyboardMarkup(row_width=1)
-    menu_keyboard.add(KeyboardButton('/help'))
-    reply_text = db_interface.userRegistration(message.chat.id)
-    bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
 
 
 # Define a function to handle the /help command
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['help'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def help_handler(message):
     bot.reply_to(message,
                  'Type:\n"/quiz" - to get a quiz\n'
@@ -120,10 +148,23 @@ def help_handler(message):
                  '"/change_dict" - to change level of your dictionary')
 
 
+# Define a function to handle the /start command
+@bot.message_handler(commands=['start'])
 @retry_on_connection_error(max_retries=5)
-@bot.message_handler(commands=['whole_dict'])
-@dec_check_user_in
 @tryExceptWithFunctionName
+@rate_limit_decorator
+def start_handler(message):
+    menu_keyboard = ReplyKeyboardMarkup(row_width=1)
+    menu_keyboard.add(KeyboardButton('/help'))
+    reply_text = db_interface.userRegistration(message.chat.id)
+    bot.reply_to(message, reply_text, reply_markup=menu_keyboard)
+
+
+@bot.message_handler(commands=['whole_dict'])
+@retry_on_connection_error(max_retries=5)
+@tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def whole_dict_handler(message):
     bot.send_message(chat_id=message.chat.id, text="Генерирую файл...")
     dictionary = db_interface.get_words_by_user_id(message.chat.id)
@@ -143,8 +184,10 @@ def whole_dict_handler(message):
 # Add words from files to the dict
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(content_types=['document'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def add_dictionary_from_file(message):
     if db_interface.get_user_access(message.chat.id) == 'user':
         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
@@ -175,8 +218,10 @@ def add_dictionary_from_file(message):
 # Sends messages to all users using the bot
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['admin_joking'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def admin_sends_message(message):
     if db_interface.get_user_access(message.chat.id) == 'user':
         bot.reply_to(message, "Ваш уровень доступа не позволяет добавлять новый словарь.")
@@ -199,7 +244,10 @@ def admin_0(message):
 # sends quiz
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['quiz'])
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def send_quiz(MesOrNum, need_list=None):
     if need_list is None:
         need_list = []
@@ -216,10 +264,10 @@ def send_quiz(MesOrNum, need_list=None):
     polls_by_dict_id = {}
     for user_id in need_list:
         dict_id = db_interface.get_user_dict_id(user_id)
+        print(user_id, dict_id)
         if dict_id in polls_by_dict_id:
             polls_by_dict_id[dict_id].send(user_id, bot)
             continue
-
         polls_by_dict_id[dict_id] = polls.create_poll(dict_id)
         polls_by_dict_id[dict_id].send(user_id, bot)
 
@@ -231,46 +279,17 @@ def send_quiz_with_dict_id(dict_id, chat_id):
     poll = polls.create_poll(dict_id)
     poll.send(chat_id, bot)
 
-
-# improves a word but in a better way
-@retry_on_connection_error(max_retries=5)
-@bot.message_handler(commands=['get_word'])
-@tryExceptWithFunctionName
-def send_change_dict(MesOrNum, need_list=None):
-    if need_list is None:
-        need_list = []
-
-    if not isinstance(MesOrNum, int):
-        need_list.append(MesOrNum.chat.id)
-    elif MesOrNum != 0:
-        need_list.append(MesOrNum)
-
-    cur_list = []
-    for user_id in need_list:
-        if db_interface.get_user_access(user_id) == "admin":
-            cur_list.append(user_id)
-
-    for user_id in cur_list:
-        dictionary = db_interface.get_words_by_dict_id("TEST_ALL")
-        part_number = random.randint(0, 4)
-        cur_word = random.choice(dictionary[num_to_part[part_number]])
-        # print(cur_word)
-        word = cur_word['word']
-        trsl = cur_word['trsl']
-        trsc = cur_word['trsc']
-        bot.send_message(user_id, f"{word}-{trsl}-{trsc}")
-
-
 # function to send quizzes to the users
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def check_send_quiz():
     need_list = db_interface.get_needed_users()
     if len(need_list) == 0:
         return
     send_quiz(0, need_list)
-    # send_change_dict(0, need_list)
 
 
+# asks for a valid number
 def get_valid_integer(text):
     while True:
         try:
@@ -282,39 +301,45 @@ def get_valid_integer(text):
 # updates user's mailing status
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['start_mailing'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def start_mailing(message):
-    if message.text == "/start_mailing":
-        f = db_interface.started_mailing(message.chat.id)
-        if f != 0:
-            bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
-            return
-
-        bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")
-        bot.register_next_step_handler(message, start_mailing)
+    f = db_interface.started_mailing(message.chat.id)
+    if f != 0:
+        bot.send_message(message.chat.id, "У Вас уже запущена рассылка")
         return
 
+    bot.send_message(message.chat.id, "Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)")
+    bot.register_next_step_handler(message, start_mailing_set)
+
+
+@retry_on_connection_error(max_retries=5)
+@tryExceptWithFunctionName
+def start_mailing_set(message):
     try:
         minutes = get_valid_integer(message.text)
         if minutes is None:
             bot.reply_to(message, 'Пожалуйста, введите число')
-            bot.register_next_step_handler(message, start_mailing)
+            bot.register_next_step_handler(message, start_mailing_set)
             return
     except:
         bot.reply_to(message, 'Пожалуйста, введите число')
-        bot.register_next_step_handler(message, change_mailing_time)
+        bot.register_next_step_handler(message, start_mailing_set)
         return
 
-    bot.send_message(message.chat.id, "Запустил рассылку")
+    bot.send_message(message.chat.id, "Установил время рассылки")
     db_interface.update_mailing(message.chat.id, minutes)
 
 
 # Stops mailing
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['stop_mailing'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def stop_mailing(message):
     f = db_interface.started_mailing(message.chat.id)
     if f != 0:
@@ -327,8 +352,10 @@ def stop_mailing(message):
 # Changes a period of mailing
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['change_mailing_time'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def change_mailing_time(message):
     f = db_interface.started_mailing(message.chat.id)
     if f == 0:
@@ -336,37 +363,23 @@ def change_mailing_time(message):
         return
 
     # asks for number of minutes
-    if message.text == "/change_mailing_time":
-        bot.reply_to(message, 'Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)')
-        bot.register_next_step_handler(message, change_mailing_time)
-        return
-
-    # changes time
-    try:
-        minutes = get_valid_integer(message.text)
-        if minutes is None:
-            bot.reply_to(message, 'Пожалуйста, введите число')
-            bot.register_next_step_handler(message, change_mailing_time)
-            return
-    except:
-        bot.reply_to(message, 'Пожалуйста, введите число')
-        bot.register_next_step_handler(message, change_mailing_time)
-        return
-
-    bot.send_message(message.chat.id, "Изменил время")
-    db_interface.update_mailing(message.chat.id, minutes)
+    bot.reply_to(message, 'Введите, как часто Вы хотите, чтобы приходили квизы(в минутах)')
+    bot.register_next_step_handler(message, start_mailing_set)  # start_mailing_set sets only new time for a user and
+    # can be used in this function too
 
 
 # Changes user's dict_id
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['change_dict'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def change_dict(message):
     keyboard = types.ReplyKeyboardMarkup()
     dict_ids = db_interface.get_dict_ids()
     for dict_id in dict_ids:
-        if dict_id == "ALL" or dict_id.find("TEST") != -1:
+        if dict_id == "ALL":
             continue
 
         keyboard.row(dict_id)
@@ -380,7 +393,7 @@ def change_dict(message):
 def handle_buttons(message, dict_ids):
     chosen_option = message.text
     if chosen_option not in dict_ids:
-        bot.send_message(message.chat.id, "Такой опции не было o_0", reply_markup=ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Такой опции не было o_0. Try again", reply_markup=ReplyKeyboardRemove())
         return
 
     for i in range(3):
@@ -392,6 +405,7 @@ def handle_buttons(message, dict_ids):
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
 def update_dict_in_bd(message, dict_ids, chosen_option):
     cur_text = message.text
     if cur_text != "/yes":
@@ -405,8 +419,10 @@ def update_dict_in_bd(message, dict_ids, chosen_option):
 # Creates a game for users
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['game'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def game_get_num(message):
     bot.reply_to(message, 'Введите количество квизов, которое вы хотите получить')
     bot.register_next_step_handler(message, game)
@@ -414,6 +430,7 @@ def game_get_num(message):
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
 def game(message):
     try:
         times = get_valid_integer(message.text)
@@ -464,8 +481,10 @@ def game(message):
 # Fixes the word
 @retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['improve_word'])
-@dec_check_user_in
+@retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
+@rate_limit_decorator
+@dec_check_user_in
 def improve_word_0(message, is_add=0):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":
@@ -498,6 +517,18 @@ def improve_word(message, arr, is_add=0):
     arr.append(message.text)
     for i in range(len(arr) - 1):
         arr[i] = arr[i].lower()
+    print(arr)
+    print(is_add)
+    if is_add:
+        uniqueness = processing.check_uniqueness(arr[0])
+        if not uniqueness:
+            bot.send_message(message.chat.id, "Такое слово уже существует :)", reply_markup=ReplyKeyboardRemove())
+            return
+        print(uniqueness)
+        text = db_interface.add_word_to_dict(arr[0], arr[1], arr[2], arr[3], arr[4])
+        print("good")
+        bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
+        return
 
     if is_add:
         uniqueness = processing.check_uniqueness(arr[0])
@@ -513,8 +544,9 @@ def improve_word(message, arr, is_add=0):
 
 
 # adds word manually
-@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['add_word'])
+@rate_limit_decorator
+@retry_on_connection_error(max_retries=5)
 @dec_check_user_in
 @tryExceptWithFunctionName
 def add_word_manually(message):
@@ -523,8 +555,10 @@ def add_word_manually(message):
 
 # After that goes a function that works with text not a command
 
-@retry_on_connection_error(max_retries=5)
 @bot.message_handler(content_types=['text'])
+@retry_on_connection_error(max_retries=5)
+@tryExceptWithFunctionName
+@rate_limit_decorator
 @dec_check_user_in
 @tryExceptWithFunctionName
 def is_reply_to_bot_message(message):
@@ -563,7 +597,6 @@ def reply_process_text(message):
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
 def reply_process_poll(message):
-    # print(message.reply_to_message)
     poll = message.reply_to_message.poll
     quest = poll.question
 
@@ -584,11 +617,32 @@ def reply_process_poll(message):
     bot.register_next_step_handler(message, improve_word, arr)
 
 
+def check_and_call():
+    while True:
+        current_time = datetime.datetime.now().time()
+        current_seconds = current_time.second
+        print(current_time)
+        if current_seconds == 0:
+            check_send_quiz()
+
+        print("dictionary: ")
+        print(last_message_time)
+
+        # Adjust the sleep duration as needed (e.g., every minute)
+        time.sleep(10)
+
+
 def main():
     try:
         print(__name__)
-        #set_interval(check_send_quiz, 60)
-        bot.polling()
+        # set_interval(check_send_quiz, 60)
+
+        # Start the time-checking function in a separate thread
+        # time_check_thread = threading.Thread(target=check_and_call)
+        # time_check_thread.daemon = True  # Set the thread as a daemon, so it exits when the main program exits
+        # time_check_thread.start()
+
+        bot.polling(none_stop=True)
     except Conflict:
         print("Another instance of the bot is running. Exiting.")
         exit(1)

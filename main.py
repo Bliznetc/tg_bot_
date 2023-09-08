@@ -400,7 +400,6 @@ def handle_buttons(message, dict_ids):
 
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
-@rate_limit_decorator
 def update_dict_in_bd(message, dict_ids, chosen_option):
     cur_text = message.text
     if cur_text != "/yes":
@@ -540,8 +539,6 @@ def improve_word(message, arr, is_add=0):
 @bot.message_handler(commands=['add_word'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
-@rate_limit_decorator
-@dec_check_user_in
 def add_word_manually(message):
     improve_word_0(message, 1)
 

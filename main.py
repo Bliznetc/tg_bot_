@@ -548,7 +548,6 @@ def improve_word(message, arr, is_add=0):
 @rate_limit_decorator
 @retry_on_connection_error(max_retries=5)
 @dec_check_user_in
-@tryExceptWithFunctionName
 def add_word_manually(message):
     improve_word_0(message, 1)
 
@@ -560,7 +559,6 @@ def add_word_manually(message):
 @tryExceptWithFunctionName
 @rate_limit_decorator
 @dec_check_user_in
-@tryExceptWithFunctionName
 def is_reply_to_bot_message(message):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":

@@ -15,7 +15,6 @@ import polls
 
 from telegram.error import Conflict
 from requests.exceptions import ConnectionError
-
 # from functools import wraps
 
 # Initialize the bot using the bot token
@@ -38,7 +37,6 @@ def retry_on_connection_error(max_retries=5):
                     time.sleep(wait)
                     continue
             return None  # or you can re-raise the last exception
-
         return wrapper
 
     return decorator
@@ -56,6 +54,7 @@ def dec_check_user_in(func):
     def wrapper(message, *args, **kwargs):
         # print("check_user_in is done")
         # print(func.__name__)
+
         if db_interface.check_user_in(message.chat.id):
             func(message, *args, **kwargs)
         else:
@@ -76,7 +75,6 @@ def tryExceptWithFunctionName(func):
         except Exception as e:
             print(e)
             print(f"{func.__name__} - error occurred here")
-
     return wrapper
 
 
@@ -128,7 +126,9 @@ def rate_limit_decorator(func):
 #     return t
 
 
+
 # Define a function to handle the /help command
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['help'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -182,6 +182,7 @@ def whole_dict_handler(message):
 
 
 # Add words from files to the dict
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(content_types=['document'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -215,6 +216,7 @@ def add_dictionary_from_file(message):
 
 
 # Sends messages to all users using the bot
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['admin_joking'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -240,6 +242,7 @@ def admin_0(message):
 
 
 # sends quiz
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['quiz'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -276,7 +279,6 @@ def send_quiz_with_dict_id(dict_id, chat_id):
     poll = polls.create_poll(dict_id)
     poll.send(chat_id, bot)
 
-
 # function to send quizzes to the users
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -297,6 +299,7 @@ def get_valid_integer(text):
 
 
 # updates user's mailing status
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['start_mailing'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -331,6 +334,7 @@ def start_mailing_set(message):
 
 
 # Stops mailing
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['stop_mailing'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -346,6 +350,7 @@ def stop_mailing(message):
 
 
 # Changes a period of mailing
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['change_mailing_time'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -364,6 +369,7 @@ def change_mailing_time(message):
 
 
 # Changes user's dict_id
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['change_dict'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -411,6 +417,7 @@ def update_dict_in_bd(message, dict_ids, chosen_option):
 
 
 # Creates a game for users
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['game'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -472,6 +479,7 @@ def game(message):
 
 
 # Fixes the word
+@retry_on_connection_error(max_retries=5)
 @bot.message_handler(commands=['improve_word'])
 @retry_on_connection_error(max_retries=5)
 @tryExceptWithFunctionName
@@ -522,6 +530,15 @@ def improve_word(message, arr, is_add=0):
         bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
         return
 
+    if is_add:
+        uniqueness = processing.check_uniqueness(arr[0])
+        if not uniqueness:
+            bot.send_message(message.chat.id, "Такое слово уже существует :)", reply_markup=ReplyKeyboardRemove())
+            return
+        text = db_interface.add_word_to_dict(arr[0], arr[1], arr[2], arr[3], arr[4])
+        bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
+        return
+
     text = db_interface.fix_the_word(message.chat.id, arr)
     bot.send_message(message.chat.id, text, reply_markup=ReplyKeyboardRemove())
 
@@ -543,6 +560,7 @@ def add_word_manually(message):
 @tryExceptWithFunctionName
 @rate_limit_decorator
 @dec_check_user_in
+@tryExceptWithFunctionName
 def is_reply_to_bot_message(message):
     access = db_interface.get_user_access(message.chat.id)
     if access != "admin":

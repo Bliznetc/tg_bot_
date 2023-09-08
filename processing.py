@@ -82,4 +82,3 @@ def check_uniqueness(word: str) -> bool:
                     break
     return uniqueness
 
-# print(translate_to_english("piłka", "pl"))

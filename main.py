@@ -629,7 +629,7 @@ def check_and_call():
 
         # Adjust the sleep duration as needed (e.g., every minute)
         if found:
-            timeSleep = 60
+            timeSleep = 60 - current_seconds
         time.sleep(timeSleep)
 
 

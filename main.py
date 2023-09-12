@@ -632,7 +632,7 @@ def check_and_call():
         current_seconds = current_time.second
         if found:
             timeSleep = 60 - current_seconds
-        time.sleep(timeSleep)
+        time.sleep(1)
 
 
 def main():

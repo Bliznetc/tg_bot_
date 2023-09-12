@@ -56,6 +56,9 @@ def dec_check_user_in(func):
     def wrapper(message, *args, **kwargs):
         # print("check_user_in is done")
         # print(func.__name__)
+        if type(message) == int:
+            func(message, *args, **kwargs)
+            return
 
         if db_interface.check_user_in(message.chat.id):
             func(message, *args, **kwargs)
@@ -90,13 +93,15 @@ rate_limit_max_messages = 1
 def rate_limit_decorator(func):
     @functools.wraps(func)
     def wrapper(message, *args, **kwargs):
-        print("rate_limit is done")
-        print(message.text)
-        print(func.__name__)
+        # in case decorator was called from send_quiz which in its turn was called from mailing function
+        if type(message) == int:
+            func(message, *args, **kwargs)
+            return
+
+        # print("rate_limit is done")
+        # print(func.__name__)
         user_id = message.from_user.id
         now = time.time()
-        print(now)
-        print(last_message_time)
         # Check if the user is in the dictionary and the rate limit is exceeded
         if user_id in last_message_time:
             if now - last_message_time[user_id] < rate_limit_window:
@@ -252,7 +257,7 @@ def send_quiz(MesOrNum, need_list=None):
     if need_list is None:
         need_list = []
 
-    if not isinstance(MesOrNum, int):
+    if type(MesOrNum) != int:
         need_list.append(MesOrNum.chat.id)
     elif MesOrNum != 0:
         need_list.append(MesOrNum)
@@ -609,18 +614,23 @@ def reply_process_poll(message):
 
 
 def check_and_call():
+    found = False
+    timeSleep = 1
     while True:
         current_time = datetime.datetime.now().time()
         current_seconds = current_time.second
         # print(current_time)
         if current_seconds == 0:
             check_send_quiz()
+            found = True
 
         # print("dictionary: ")
         # print(last_message_time)
 
         # Adjust the sleep duration as needed (e.g., every minute)
-        time.sleep(1)
+        if found:
+            timeSleep = 50
+        time.sleep(timeSleep)
 
 
 def main():

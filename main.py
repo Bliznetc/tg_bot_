@@ -614,23 +614,18 @@ def reply_process_poll(message):
 
 
 def check_and_call():
-    found = False
-    timeSleep = 1
     while True:
         current_time = datetime.datetime.now().time()
         current_seconds = current_time.second
         # print(current_time)
         if current_seconds == 0:
             check_send_quiz()
-            found = True
 
         # print("dictionary: ")
         # print(last_message_time)
 
         # Adjust the sleep duration as needed (e.g., every minute)
-        if found:
-            timeSleep = 50
-        time.sleep(timeSleep)
+        time.sleep(60)
 
 
 def main():

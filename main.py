@@ -629,9 +629,9 @@ def main():
         # set_interval(check_send_quiz, 60)
 
         # Start the time-checking function in a separate thread
-        # time_check_thread = threading.Thread(target=check_and_call)
-        # time_check_thread.daemon = True  # Set the thread as a daemon, so it exits when the main program exits
-        # time_check_thread.start()
+        time_check_thread = threading.Thread(target=check_and_call)
+        time_check_thread.daemon = True  # Set the thread as a daemon, so it exits when the main program exits
+        time_check_thread.start()
 
         bot.polling(none_stop=True)
     except Conflict:

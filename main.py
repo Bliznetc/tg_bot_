@@ -628,6 +628,7 @@ def check_and_call():
         # print(last_message_time)
 
         # Adjust the sleep duration as needed (e.g., every minute)
+        current_time = datetime.datetime.now().time()
         current_seconds = current_time.second
         if found:
             timeSleep = 60 - current_seconds

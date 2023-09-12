@@ -612,15 +612,15 @@ def check_and_call():
     while True:
         current_time = datetime.datetime.now().time()
         current_seconds = current_time.second
-        print(current_time)
+        # print(current_time)
         if current_seconds == 0:
             check_send_quiz()
 
-        print("dictionary: ")
-        print(last_message_time)
+        # print("dictionary: ")
+        # print(last_message_time)
 
         # Adjust the sleep duration as needed (e.g., every minute)
-        time.sleep(10)
+        time.sleep(1)
 
 
 def main():

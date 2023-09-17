@@ -144,16 +144,13 @@ def rate_limit_decorator(func):
 @dec_check_user_in
 def help_handler(message):
     bot.reply_to(message,
-                 'Type:\n"/quiz" - to get a quiz\n'
-                 '"/whole_dict" - to get all the words in your dictionary\n'
-                 '"/start_mailing" - to start getting quizzes\n'
-                 '"/stop_mailing" - to stop mailing\n'
-                 '"/change_mailing_time" - to change mailing time\n'
-                 '"/improve_word" - secret\n'
-                 '"/admin_joking" - secret #2\n'
-                 '"/game" - to get a game\n'
-                 '"/add_word" - to add word to a dictionary\n'
-                 '"/change_dict" - to change level of your dictionary')
+                 'Напишите:\n"/quiz" - чтобы получить квиз\n'
+                 '"/whole_dict" - чтобы получить все слова из Вашего словаря\n'
+                 '"/start_mailing" - чтобы запустить автоматическую рассылку квизов\n'
+                 '"/stop_mailing" - чтобы остановить автоматическую рассылку квизов\n'
+                 '"/change_mailing_time" - чтобы изменить интервал рассылки квизов\n'
+                 '"/game" - чтобы сыграть в игру\n'
+                 '"/change_dict" - чтобы изменить сложность словаря')
 
 
 # Define a function to handle the /start command

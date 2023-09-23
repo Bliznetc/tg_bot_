@@ -93,3 +93,5 @@ for dict in dict_ids:
 # print(uniqueness)
 # if uniqueness:
 #     print(db_interface.add_word_to_dict(word, trsl, trsc, partOfSpeech, Dictionary))
+
+# i want to check how to push it directly
